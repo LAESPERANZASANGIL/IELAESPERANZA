@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IE La Esperanza — Sistema académico
 
-## Getting Started
+Aplicación web académica de la Institución Educativa La Esperanza. Construida con Next.js (App Router), TypeScript, Tailwind CSS y Supabase (PostgreSQL).
 
-First, run the development server:
+## Roles
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+`rector`, `administrador`, `secretaria`, `docente`, `padre_familia`, `estudiante`.
+
+## Estructura
+
+```
+src/
+  app/
+    login/                 Página de inicio de sesión
+    auth/callback/         Callback de Supabase Auth
+    (dashboard)/           Rutas protegidas con sidebar según rol
+      dashboard/           Panel principal por rol
+      estudiantes/         Módulo de estudiantes
+      grados/               Módulo de grados y cursos
+      docentes/            Módulo de docentes
+      asignaturas/         Módulo de asignaturas
+      periodos/            Módulo de periodos académicos
+      notas/               Módulo de notas
+      asistencia/          Módulo de asistencia/fallas
+      mensajeria/          Módulo de mensajería
+      boletines/           Módulo de boletines en PDF
+      certificados/        Módulo de certificados institucionales
+  components/
+    ui/                    Primitivas de interfaz (Card, Badge, EmptyState)
+    layout/                Sidebar, Header, configuración de navegación por rol
+    auth/                  Formulario de login y botón de logout
+  lib/
+    supabase/              Clientes de Supabase (browser, server, middleware)
+    auth/                  Helpers de sesión (perfil actual, rutas protegidas)
+  types/
+    roles.ts               Roles del sistema
+    database.types.ts      Tipos que reflejan el esquema de base de datos
+  proxy.ts                 Middleware de Next.js: protege rutas y refresca sesión
+supabase/
+  migrations/              Esquema SQL (tablas, enums, RLS por rol)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuración
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Crea un proyecto en [Supabase](https://supabase.com).
+2. Copia `.env.local.example` a `.env.local` y completa las claves del proyecto.
+3. Aplica las migraciones de `supabase/migrations/` (ver `supabase/README.md`).
+4. Crea usuarios en Supabase Auth y su fila correspondiente en `profiles` con el `role` adecuado.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Desarrollo
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abre [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Próximos pasos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Esta es la arquitectura base. Los módulos (estudiantes, grados, docentes, asignaturas, periodos, notas, asistencia, mensajería, boletines en PDF y certificados) están planteados con pantallas iniciales; la funcionalidad CRUD y los reportes en PDF se implementarán de forma incremental.
