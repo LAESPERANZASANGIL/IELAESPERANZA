@@ -32,7 +32,7 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
                     <Td>{grupo.nombre}</Td>
                     <Td>{grupo.capacidad ?? "—"}</Td>
                     <Td>
-                      <Link className="text-sm font-medium text-emerald-700 hover:underline" href={`/grados/${id}/grupos/${grupo.id}`}>
+                      <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${id}/grupos/${grupo.id}`}>
                         Malla curricular
                       </Link>
                     </Td>

@@ -15,7 +15,7 @@ export default function MatriculaPage() {
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-xl border border-slate-200 bg-white p-5 text-sm font-medium text-slate-900 hover:border-emerald-400"
+            className="rounded-xl border border-slate-200 bg-white p-5 text-sm font-medium text-slate-900 hover:border-brand-400"
           >
             {link.label}
           </Link>

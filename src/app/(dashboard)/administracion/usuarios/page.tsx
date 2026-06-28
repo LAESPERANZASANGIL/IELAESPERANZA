@@ -37,7 +37,7 @@ export default async function UsuariosPage() {
                       <form action={actualizarEstadoUsuarioAction}>
                         <input type="hidden" name="id" value={usuario.id} />
                         <input type="hidden" name="activo" value={(!usuario.activo).toString()} />
-                        <button className="text-sm font-medium text-emerald-700 hover:underline" type="submit">
+                        <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
                           {usuario.activo ? "Desactivar" : "Activar"}
                         </button>
                       </form>

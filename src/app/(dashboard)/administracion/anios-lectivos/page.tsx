@@ -36,7 +36,7 @@ export default async function AniosLectivosPage() {
                       {anio.estado !== "activo" && (
                         <form action={activarAnioLectivoAction}>
                           <input type="hidden" name="id" value={anio.id} />
-                          <button className="text-sm font-medium text-emerald-700 hover:underline" type="submit">
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
                             Activar
                           </button>
                         </form>

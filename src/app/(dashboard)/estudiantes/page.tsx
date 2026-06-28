@@ -48,7 +48,7 @@ export default async function EstudiantesPage({
                     <Td>{estudiante.documento_numero ?? "—"}</Td>
                     <Td>{estudiante.estado_general}</Td>
                     <Td>
-                      <Link className="text-sm font-medium text-emerald-700 hover:underline" href={`/estudiantes/${estudiante.id}`}>
+                      <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/estudiantes/${estudiante.id}`}>
                         Ver
                       </Link>
                     </Td>

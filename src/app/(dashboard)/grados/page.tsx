@@ -34,7 +34,7 @@ export default async function GradosPage() {
                     <Td>{grado.nivel}</Td>
                     <Td>{grado.orden}</Td>
                     <Td>
-                      <Link className="text-sm font-medium text-emerald-700 hover:underline" href={`/grados/${grado.id}`}>
+                      <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${grado.id}`}>
                         Ver grupos
                       </Link>
                     </Td>

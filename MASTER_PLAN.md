@@ -1,6 +1,8 @@
-# MASTER PLAN — ERP Educativo IE La Esperanza
+# MASTER PLAN — ERP Educativo Campus La Esperanza
 
-> Estado: **propuesta para aprobación**. Ningún módulo descrito aquí debe implementarse hasta que este documento sea aprobado explícitamente.
+> Proyecto renombrado a **Campus La Esperanza** (ver `docs/adr/0002-rebranding-campus-la-esperanza.md`). Las referencias a "IE La Esperanza" en este documento son al nombre histórico de la institución, no al producto.
+>
+> Estado: **aprobado**. El núcleo de Fase 1 ya está implementado; los módulos restantes se construyen de forma incremental.
 
 ## 0. Visión y restricciones de diseño
 

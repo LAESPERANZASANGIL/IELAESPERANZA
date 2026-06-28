@@ -1,4 +1,4 @@
-# Base de datos - IE La Esperanza
+# Base de datos - Campus La Esperanza
 
 Migraciones SQL para el proyecto Supabase/PostgreSQL.
 

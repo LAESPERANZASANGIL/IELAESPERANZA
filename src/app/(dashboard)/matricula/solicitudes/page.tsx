@@ -57,7 +57,7 @@ export default async function SolicitudesAdmisionPage() {
                                 </option>
                               ))}
                             </Select>
-                            <button className="text-sm font-medium text-emerald-700 hover:underline" type="submit">
+                            <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
                               Admitir
                             </button>
                           </form>

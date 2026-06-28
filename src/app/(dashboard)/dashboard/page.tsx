@@ -1,5 +1,4 @@
 import { Header } from "@/components/layout/Header";
-import { Card } from "@/components/ui/Card";
 import { requireProfile } from "@/lib/auth/session";
 import { ROLE_LABELS } from "@/types/roles";
 
@@ -36,22 +35,36 @@ const ROLE_WIDGETS: Record<string, { title: string; description: string }[]> = {
   ],
 };
 
+const ACCENTS = ["bg-brand-500", "bg-accent-500", "bg-brand-700"];
+
 export default async function DashboardPage() {
   const profile = await requireProfile();
   const widgets = ROLE_WIDGETS[profile.role] ?? [];
 
   return (
     <>
-      <Header title={`Panel - ${ROLE_LABELS[profile.role]}`} />
+      <Header title="Panel principal" />
       <main className="p-6">
-        <p className="mb-6 text-sm text-slate-500">
-          Bienvenido(a), {profile.full_name}. Este es tu panel principal según tu rol.
-        </p>
+        <div className="mb-6 rounded-2xl bg-gradient-to-r from-brand-700 to-brand-500 p-6 text-white">
+          <p className="text-sm font-medium text-brand-100">{ROLE_LABELS[profile.role]}</p>
+          <h2 className="mt-1 text-xl font-bold">Hola, {profile.full_name.split(" ")[0]} 👋</h2>
+          <p className="mt-1 text-sm text-brand-50">
+            Este es tu panel principal en Campus La Esperanza.
+          </p>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {widgets.map((widget) => (
-            <Card key={widget.title} title={widget.title}>
-              <p className="text-sm text-slate-500">{widget.description}</p>
-            </Card>
+          {widgets.map((widget, index) => (
+            <div
+              key={widget.title}
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+              <div className={`h-1.5 ${ACCENTS[index % ACCENTS.length]}`} />
+              <div className="p-5">
+                <h3 className="text-sm font-semibold text-slate-800">{widget.title}</h3>
+                <p className="mt-2 text-sm text-slate-500">{widget.description}</p>
+              </div>
+            </div>
           ))}
         </div>
       </main>

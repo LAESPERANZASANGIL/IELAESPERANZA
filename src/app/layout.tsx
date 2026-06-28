@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IE La Esperanza | Sistema académico",
-  description: "Sistema de gestión académica de la Institución Educativa La Esperanza",
+  title: {
+    default: "Campus La Esperanza",
+    template: "%s · Campus La Esperanza",
+  },
+  description: "Plataforma de gestión académica de la Institución Educativa La Esperanza",
 };
 
 export default function RootLayout({
