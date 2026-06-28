@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm() {
-  const router = useRouter();
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
@@ -17,17 +15,27 @@ export function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
 
     setLoading(false);
 
-    if (signInError) {
-      setError("Correo o contraseña incorrectos.");
+    if (resetError) {
+      setError("No se pudo enviar el correo de recuperación. Intenta de nuevo.");
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <p className="text-sm text-slate-700">
+        Si el correo <span className="font-medium">{email}</span> está registrado, recibirás un
+        enlace para restablecer tu contraseña.
+      </p>
+    );
   }
 
   return (
@@ -47,35 +55,14 @@ export function LoginForm() {
         />
       </div>
 
-      <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-          Contraseña
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-          placeholder="••••••••"
-        />
-      </div>
-
       {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <div className="text-right">
-        <a href="/forgot-password" className="text-sm font-medium text-brand-700 hover:underline">
-          ¿Olvidaste tu contraseña?
-        </a>
-      </div>
 
       <button
         type="submit"
         disabled={loading}
         className="w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
       >
-        {loading ? "Ingresando..." : "Ingresar"}
+        {loading ? "Enviando..." : "Enviar enlace de recuperación"}
       </button>
     </form>
   );
