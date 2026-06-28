@@ -3,38 +3,37 @@ import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { listPeriodos } from "@/modules/academico";
+import { listProcesosMatricula } from "@/modules/matricula";
 import { listAniosLectivos } from "@/modules/core";
-import { createPeriodoAction } from "./actions";
+import { createProcesoMatriculaAction } from "./actions";
 
-export default async function PeriodosPage() {
-  const [periodos, anios] = await Promise.all([listPeriodos(), listAniosLectivos()]);
-  const anioPorId = new Map(anios.map((anio) => [anio.id, anio]));
+export default async function ProcesosMatriculaPage() {
+  const [procesos, anios] = await Promise.all([listProcesosMatricula(), listAniosLectivos()]);
 
   return (
     <>
-      <Header title="Periodos académicos" />
+      <Header title="Procesos de matrícula" />
       <main className="grid gap-6 p-6 lg:grid-cols-3">
         <section className="lg:col-span-2">
-          {periodos.length === 0 ? (
-            <EmptyState title="Aún no hay periodos académicos definidos" />
+          {procesos.length === 0 ? (
+            <EmptyState title="Aún no hay procesos de matrícula" />
           ) : (
             <Table>
               <Thead>
                 <Th>Nombre</Th>
                 <Th>Año lectivo</Th>
-                <Th>Inicio</Th>
-                <Th>Fin</Th>
+                <Th>Apertura</Th>
+                <Th>Cierre</Th>
                 <Th>Estado</Th>
               </Thead>
               <Tbody>
-                {periodos.map((periodo) => (
-                  <tr key={periodo.id}>
-                    <Td>{periodo.nombre}</Td>
-                    <Td>{anioPorId.get(periodo.anio_lectivo_id)?.anio ?? "—"}</Td>
-                    <Td>{periodo.fecha_inicio}</Td>
-                    <Td>{periodo.fecha_fin}</Td>
-                    <Td>{periodo.estado}</Td>
+                {procesos.map((proceso) => (
+                  <tr key={proceso.id}>
+                    <Td>{proceso.nombre}</Td>
+                    <Td>{proceso.anio_lectivo.anio}</Td>
+                    <Td>{proceso.fecha_apertura}</Td>
+                    <Td>{proceso.fecha_cierre}</Td>
+                    <Td>{proceso.estado}</Td>
                   </tr>
                 ))}
               </Tbody>
@@ -42,8 +41,8 @@ export default async function PeriodosPage() {
           )}
         </section>
         <section className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Nuevo periodo</h2>
-          <form action={createPeriodoAction} className="space-y-4">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">Nuevo proceso</h2>
+          <form action={createProcesoMatriculaAction} className="space-y-4">
             <Field label="Año lectivo" htmlFor="anio_lectivo_id">
               <Select id="anio_lectivo_id" name="anio_lectivo_id" required defaultValue="">
                 <option value="" disabled>
@@ -59,16 +58,13 @@ export default async function PeriodosPage() {
             <Field label="Nombre" htmlFor="nombre">
               <TextInput id="nombre" name="nombre" required />
             </Field>
-            <Field label="Orden" htmlFor="orden">
-              <TextInput id="orden" name="orden" type="number" defaultValue={0} />
+            <Field label="Fecha de apertura" htmlFor="fecha_apertura">
+              <TextInput id="fecha_apertura" name="fecha_apertura" type="date" required />
             </Field>
-            <Field label="Fecha de inicio" htmlFor="fecha_inicio">
-              <TextInput id="fecha_inicio" name="fecha_inicio" type="date" required />
+            <Field label="Fecha de cierre" htmlFor="fecha_cierre">
+              <TextInput id="fecha_cierre" name="fecha_cierre" type="date" required />
             </Field>
-            <Field label="Fecha de fin" htmlFor="fecha_fin">
-              <TextInput id="fecha_fin" name="fecha_fin" type="date" required />
-            </Field>
-            <SubmitButton>Crear periodo</SubmitButton>
+            <SubmitButton>Crear proceso</SubmitButton>
           </form>
         </section>
       </main>

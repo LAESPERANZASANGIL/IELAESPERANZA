@@ -13,9 +13,39 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["rector", "administrador", "secretaria", "docente", "padre_familia", "estudiante"],
   },
   {
+    href: "/administracion/sedes",
+    label: "Sedes",
+    roles: ["rector", "administrador"],
+  },
+  {
+    href: "/administracion/anios-lectivos",
+    label: "Años lectivos",
+    roles: ["rector", "administrador"],
+  },
+  {
+    href: "/administracion/usuarios",
+    label: "Usuarios",
+    roles: ["rector", "administrador"],
+  },
+  {
+    href: "/matricula/procesos",
+    label: "Procesos de matrícula",
+    roles: ["rector", "administrador", "secretaria"],
+  },
+  {
+    href: "/matricula/solicitudes",
+    label: "Solicitudes de admisión",
+    roles: ["rector", "administrador", "secretaria"],
+  },
+  {
     href: "/estudiantes",
     label: "Estudiantes",
     roles: ["rector", "administrador", "secretaria", "docente"],
+  },
+  {
+    href: "/acudientes",
+    label: "Acudientes",
+    roles: ["rector", "administrador", "secretaria"],
   },
   {
     href: "/grados",
