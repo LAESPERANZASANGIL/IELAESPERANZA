@@ -25,7 +25,7 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
   const [grupos, anios, docentes] = await Promise.all([
     listGrupos({ grado_id: id }),
     listAniosLectivos(),
-    listDocentes(),
+    listDocentes(true),
   ]);
 
   return (

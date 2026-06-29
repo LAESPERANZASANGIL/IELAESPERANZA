@@ -27,14 +27,19 @@ export function ResetPasswordForm() {
 
     setLoading(true);
     const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    setLoading(false);
+    const { data: updateData, error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
+      setLoading(false);
       setError("No se pudo actualizar la contraseña. Solicita un nuevo enlace.");
       return;
     }
 
+    if (updateData.user) {
+      await supabase.from("profiles").update({ must_change_password: false }).eq("id", updateData.user.id);
+    }
+
+    setLoading(false);
     router.push("/dashboard");
     router.refresh();
   }

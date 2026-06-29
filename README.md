@@ -84,3 +84,14 @@ Las entidades con ciclo de vida de más de dos estados (`anios_lectivos`, `perio
 ## Próximos pasos
 
 El núcleo de Fase 1 (administración, matrícula, estudiantes/acudientes y académico) ya tiene pantallas funcionales. La Fase 2 (núcleo institucional) agregó configuración institucional (`administracion/configuracion`), jornada y director de grupo en `grupos`, y edición de estudiantes/docentes — ver `supabase/migrations/0003_nucleo_institucional.sql`. Los módulos restantes (notas, asistencia, mensajería, boletines en PDF y certificados) están planteados con pantallas iniciales; su funcionalidad CRUD y los reportes en PDF se implementarán de forma incremental, módulo por módulo, según `MASTER_PLAN.md`.
+
+### Módulo de docentes (completo)
+
+El módulo de docentes (`/docentes`) quedó completo con ver `supabase/migrations/0008_docentes_modulo_completo.sql`:
+
+- **Ficha extendida**: además de `especialidad`, `tipo_contrato` y `fecha_ingreso`, los docentes ahora registran `fecha_nacimiento`, `sexo`, `direccion`, `municipio`, `departamento`, `telefono` (fijo, distinto de `profiles.phone`/celular), `correo_personal`, `profesion` y `escalafon`.
+- **Creación sin invitación por correo**: `createDocente` crea el usuario de Supabase Auth directamente con `email_confirm: true` y una contraseña temporal definida por quien lo registra (no se envía correo de invitación), marcando `profiles.must_change_password = true`.
+- **Cambio de contraseña forzado**: si `profiles.must_change_password` es `true`, el middleware redirige cualquier ruta protegida a `/reset-password` hasta que el usuario defina su nueva contraseña; al guardarla se limpia el flag automáticamente.
+- **Un director de grupo único por año lectivo**: índice único parcial `ux_grupos_director_unico_por_anio` sobre `grupos(anio_lectivo_id, director_grupo_id)` impide asignar el mismo docente como director de más de un grupo en el mismo año lectivo. Los selectores de director de grupo solo listan docentes activos.
+- **Eliminación protegida**: `deleteDocente` rechaza el borrado si el docente tiene asignaciones en `malla_curricular` o dirige algún grupo; en ese caso se debe desactivar en lugar de eliminar.
+- **Listado con búsqueda y paginación**: `/docentes` permite filtrar por documento, nombre, especialidad, correo y estado (activo/inactivo/todos), con paginación de 20 registros por página (`listDocentesPaginado`).

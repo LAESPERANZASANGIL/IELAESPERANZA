@@ -15,7 +15,7 @@ export default async function MallaCurricularPage({
   const [malla, asignaturas, docentes] = await Promise.all([
     listMallaCurricular(grupoId),
     listAsignaturas(),
-    listDocentes(),
+    listDocentes(true),
   ]);
 
   return (

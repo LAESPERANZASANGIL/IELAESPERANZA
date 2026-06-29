@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { Asignatura, Docente, Grado, Grupo, MallaCurricular, PeriodoAcademico, Profile } from "@/types/database.types";
 
+const SEXOS = ["masculino", "femenino", "otro"] as const;
+
 export const gradoSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   nivel: z.enum(["preescolar", "primaria", "secundaria", "media"]),
@@ -17,10 +19,40 @@ export const grupoSchema = z.object({
   director_grupo_id: z.string().uuid("Selecciona un director de grupo"),
 });
 
-export const docenteUpdateSchema = z.object({
+const docenteDatosSchema = {
+  documento_tipo: z.string().optional(),
+  documento_numero: z.string().optional(),
+  full_name: z.string().min(2, "El nombre es obligatorio"),
+  fecha_nacimiento: z.string().optional(),
+  sexo: z.enum(SEXOS).optional(),
+  direccion: z.string().optional(),
+  municipio: z.string().optional(),
+  departamento: z.string().optional(),
+  phone: z.string().optional(),
+  telefono: z.string().optional(),
+  correo_personal: z.string().email("Correo personal inválido").optional().or(z.literal("")),
+  profesion: z.string().optional(),
   especialidad: z.string().min(1, "La especialidad es obligatoria"),
+  escalafon: z.string().optional(),
   tipo_contrato: z.string().optional(),
   fecha_ingreso: z.string().optional(),
+};
+
+export const docenteCreateSchema = z.object({
+  ...docenteDatosSchema,
+  email: z.string().email("Correo institucional inválido"),
+  password: z.string().min(6, "La contraseña temporal debe tener al menos 6 caracteres"),
+});
+
+export const docenteUpdateSchema = z.object(docenteDatosSchema);
+
+export const docenteFiltrosSchema = z.object({
+  documento: z.string().optional(),
+  nombre: z.string().optional(),
+  especialidad: z.string().optional(),
+  estado: z.enum(["activo", "inactivo"]).optional(),
+  correo: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
 });
 
 export const asignaturaSchema = z.object({
@@ -132,14 +164,49 @@ export async function deleteGrupo(id: string) {
   if (error) throw new Error("No se puede eliminar: el curso tiene estudiantes matriculados.");
 }
 
-export async function listDocentes(): Promise<(Docente & { profile: Profile })[]> {
+export async function listDocentes(soloActivos = false): Promise<(Docente & { profile: Profile })[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("docentes")
-    .select("*, profile:profiles(*)")
-    .order("id");
+  const joinedTable = soloActivos ? "profile:profiles!inner(*)" : "profile:profiles(*)";
+  let query = supabase.from("docentes").select(`*, ${joinedTable}`).order("id");
+  if (soloActivos) query = query.eq("profile.is_active", true);
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data as unknown as (Docente & { profile: Profile })[];
+}
+
+const DOCENTES_PAGE_SIZE = 20;
+
+export async function listDocentesPaginado(filtros: z.infer<typeof docenteFiltrosSchema>): Promise<{
+  docentes: (Docente & { profile: Profile })[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const supabase = await createClient();
+  const page = filtros.page;
+  const from = (page - 1) * DOCENTES_PAGE_SIZE;
+  const to = from + DOCENTES_PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("docentes")
+    .select("*, profile:profiles!inner(*)", { count: "exact" })
+    .order("id")
+    .range(from, to);
+
+  if (filtros.documento) query = query.ilike("profile.documento_numero", `%${filtros.documento}%`);
+  if (filtros.nombre) query = query.ilike("profile.full_name", `%${filtros.nombre}%`);
+  if (filtros.correo) query = query.ilike("profile.email", `%${filtros.correo}%`);
+  if (filtros.estado) query = query.eq("profile.is_active", filtros.estado === "activo");
+  if (filtros.especialidad) query = query.ilike("especialidad", `%${filtros.especialidad}%`);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return {
+    docentes: data as unknown as (Docente & { profile: Profile })[],
+    total: count ?? 0,
+    page,
+    pageSize: DOCENTES_PAGE_SIZE,
+  };
 }
 
 export async function getDocente(id: string): Promise<(Docente & { profile: Profile }) | null> {
@@ -153,20 +220,118 @@ export async function getDocente(id: string): Promise<(Docente & { profile: Prof
   return data as unknown as (Docente & { profile: Profile }) | null;
 }
 
+export async function createDocente(input: z.infer<typeof docenteCreateSchema>) {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: input.email,
+    password: input.password,
+    email_confirm: true,
+  });
+  if (createError) {
+    if (createError.message.toLowerCase().includes("already") || createError.code === "email_exists") {
+      throw new Error("Ya existe un usuario con ese correo.");
+    }
+    throw new Error(createError.message);
+  }
+
+  const { error: profileError } = await admin.from("profiles").insert({
+    id: created.user.id,
+    full_name: input.full_name,
+    email: input.email,
+    role: "docente",
+    documento_tipo: input.documento_tipo || null,
+    documento_numero: input.documento_numero || null,
+    phone: input.phone || null,
+    must_change_password: true,
+  });
+  if (profileError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    if (profileError.message.includes("duplicate") || profileError.code === "23505") {
+      throw new Error("Ya existe un usuario con ese documento o correo.");
+    }
+    throw new Error(profileError.message);
+  }
+
+  const { error: docenteError } = await admin.from("docentes").insert({
+    id: created.user.id,
+    especialidad: input.especialidad,
+    tipo_contrato: input.tipo_contrato || null,
+    fecha_ingreso: input.fecha_ingreso || null,
+    fecha_nacimiento: input.fecha_nacimiento || null,
+    sexo: input.sexo || null,
+    direccion: input.direccion || null,
+    municipio: input.municipio || null,
+    departamento: input.departamento || null,
+    telefono: input.telefono || null,
+    correo_personal: input.correo_personal || null,
+    profesion: input.profesion || null,
+    escalafon: input.escalafon || null,
+  });
+  if (docenteError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    throw new Error(docenteError.message);
+  }
+}
+
 export async function updateDocente(id: string, input: z.infer<typeof docenteUpdateSchema>) {
   const supabase = await createClient();
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      full_name: input.full_name,
+      documento_tipo: input.documento_tipo || null,
+      documento_numero: input.documento_numero || null,
+      phone: input.phone || null,
+    })
+    .eq("id", id);
+  if (profileError) {
+    if (profileError.message.includes("duplicate") || profileError.code === "23505") {
+      throw new Error("Ya existe un usuario con ese documento.");
+    }
+    throw new Error(profileError.message);
+  }
+
   const { error } = await supabase
     .from("docentes")
     .update({
       especialidad: input.especialidad || null,
       tipo_contrato: input.tipo_contrato || null,
       fecha_ingreso: input.fecha_ingreso || null,
+      fecha_nacimiento: input.fecha_nacimiento || null,
+      sexo: input.sexo || null,
+      direccion: input.direccion || null,
+      municipio: input.municipio || null,
+      departamento: input.departamento || null,
+      telefono: input.telefono || null,
+      correo_personal: input.correo_personal || null,
+      profesion: input.profesion || null,
+      escalafon: input.escalafon || null,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteDocente(id: string) {
+  const supabase = await createClient();
+
+  const { count: mallaCount } = await supabase
+    .from("malla_curricular")
+    .select("id", { count: "exact", head: true })
+    .eq("docente_id", id);
+  const { count: gruposCount } = await supabase
+    .from("grupos")
+    .select("id", { count: "exact", head: true })
+    .eq("director_grupo_id", id);
+
+  if ((mallaCount && mallaCount > 0) || (gruposCount && gruposCount > 0)) {
+    throw new Error(
+      "No se puede eliminar: el docente tiene asignaciones académicas o de dirección de grupo asociadas. Desactívelo en su lugar.",
+    );
+  }
+
   const { createAdminClient } = await import("@/lib/supabase/admin");
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(id);

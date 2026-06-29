@@ -16,7 +16,7 @@ export default async function EditarGrupoPage({
   const grupo = await getGrupo(grupoId);
   if (!grupo) notFound();
 
-  const [anios, docentes] = await Promise.all([listAniosLectivos(), listDocentes()]);
+  const [anios, docentes] = await Promise.all([listAniosLectivos(), listDocentes(true)]);
 
   return (
     <>

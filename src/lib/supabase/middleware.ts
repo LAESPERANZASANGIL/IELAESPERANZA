@@ -41,5 +41,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && !isPublicPath) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("must_change_password")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.must_change_password && request.nextUrl.pathname !== "/reset-password") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/reset-password";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }

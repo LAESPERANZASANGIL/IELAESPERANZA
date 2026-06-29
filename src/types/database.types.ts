@@ -63,6 +63,7 @@ export interface Profile {
   avatar_url: string | null;
   sede_id: string | null;
   is_active: boolean;
+  must_change_password: boolean;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -102,6 +103,15 @@ export interface Docente {
   especialidad: string | null;
   tipo_contrato: string | null;
   fecha_ingreso: string | null;
+  fecha_nacimiento: string | null;
+  sexo: string | null;
+  direccion: string | null;
+  municipio: string | null;
+  departamento: string | null;
+  telefono: string | null;
+  correo_personal: string | null;
+  profesion: string | null;
+  escalafon: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;

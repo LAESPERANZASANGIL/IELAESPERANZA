@@ -1,15 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { docenteUpdateSchema, updateDocente, deleteDocente } from "@/modules/academico";
-import { actualizarEstadoUsuario } from "@/modules/core";
+import { redirect } from "next/navigation";
+import { docenteCreateSchema, createDocente } from "@/modules/academico";
 
-export async function updateDocenteAction(formData: FormData) {
-  const id = String(formData.get("id"));
-  const input = docenteUpdateSchema.parse({
+export async function crearDocenteAction(formData: FormData) {
+  const input = docenteCreateSchema.parse({
     documento_tipo: formData.get("documento_tipo") || undefined,
     documento_numero: formData.get("documento_numero") || undefined,
     full_name: formData.get("full_name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
     fecha_nacimiento: formData.get("fecha_nacimiento") || undefined,
     sexo: formData.get("sexo") || undefined,
     direccion: formData.get("direccion") || undefined,
@@ -24,21 +25,8 @@ export async function updateDocenteAction(formData: FormData) {
     tipo_contrato: formData.get("tipo_contrato") || undefined,
     fecha_ingreso: formData.get("fecha_ingreso") || undefined,
   });
-  await updateDocente(id, input);
-  revalidatePath(`/docentes/${id}`);
-  revalidatePath("/docentes");
-}
 
-export async function actualizarEstadoDocenteAction(formData: FormData) {
-  const id = String(formData.get("id"));
-  const isActive = formData.get("is_active") === "true";
-  await actualizarEstadoUsuario(id, isActive);
-  revalidatePath(`/docentes/${id}`);
+  await createDocente(input);
   revalidatePath("/docentes");
-}
-
-export async function deleteDocenteAction(formData: FormData) {
-  const id = String(formData.get("id"));
-  await deleteDocente(id);
-  revalidatePath("/docentes");
+  redirect("/docentes");
 }
