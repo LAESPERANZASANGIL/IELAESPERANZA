@@ -29,8 +29,8 @@ export async function updateSedeAction(formData: FormData) {
 
 export async function actualizarEstadoSedeAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const activa = formData.get("activa") === "true";
-  await actualizarEstadoSede(id, activa);
+  const isActive = formData.get("is_active") === "true";
+  await actualizarEstadoSede(id, isActive);
   revalidatePath("/administracion/sedes");
 }
 

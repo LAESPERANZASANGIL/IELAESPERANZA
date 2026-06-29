@@ -75,9 +75,9 @@ export async function updateGrado(id: string, input: z.infer<typeof gradoSchema>
   if (error) throw new Error(error.message);
 }
 
-export async function actualizarEstadoGrado(id: string, activo: boolean) {
+export async function actualizarEstadoGrado(id: string, isActive: boolean) {
   const supabase = await createClient();
-  const { error } = await supabase.from("grados").update({ activo }).eq("id", id);
+  const { error } = await supabase.from("grados").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 
@@ -120,9 +120,9 @@ export async function updateGrupo(id: string, input: z.infer<typeof grupoSchema>
   if (error) throw new Error(error.message);
 }
 
-export async function actualizarEstadoGrupo(id: string, activo: boolean) {
+export async function actualizarEstadoGrupo(id: string, isActive: boolean) {
   const supabase = await createClient();
-  const { error } = await supabase.from("grupos").update({ activo }).eq("id", id);
+  const { error } = await supabase.from("grupos").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 

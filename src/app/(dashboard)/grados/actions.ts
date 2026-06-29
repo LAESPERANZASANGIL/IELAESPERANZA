@@ -38,8 +38,8 @@ export async function updateGradoAction(formData: FormData) {
 
 export async function actualizarEstadoGradoAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const activo = formData.get("activo") === "true";
-  await actualizarEstadoGrado(id, activo);
+  const isActive = formData.get("is_active") === "true";
+  await actualizarEstadoGrado(id, isActive);
   revalidatePath("/grados");
 }
 
@@ -81,8 +81,8 @@ export async function updateGrupoAction(formData: FormData) {
 export async function actualizarEstadoGrupoAction(formData: FormData) {
   const gradoId = String(formData.get("grado_id"));
   const id = String(formData.get("id"));
-  const activo = formData.get("activo") === "true";
-  await actualizarEstadoGrupo(id, activo);
+  const isActive = formData.get("is_active") === "true";
+  await actualizarEstadoGrupo(id, isActive);
   revalidatePath(`/grados/${gradoId}`);
 }
 

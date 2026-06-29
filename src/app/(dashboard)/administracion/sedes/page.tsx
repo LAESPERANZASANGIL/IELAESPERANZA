@@ -34,7 +34,7 @@ export default async function SedesPage() {
                     <Td>{sede.codigo_dane ?? "—"}</Td>
                     <Td>{sede.direccion ?? "—"}</Td>
                     <Td>{sede.telefono ?? "—"}</Td>
-                    <Td>{sede.activa ? "Activa" : "Inactiva"}</Td>
+                    <Td>{sede.is_active ? "Activa" : "Inactiva"}</Td>
                     <Td>
                       <div className="flex items-center gap-3">
                         <Link
@@ -45,9 +45,9 @@ export default async function SedesPage() {
                         </Link>
                         <form action={actualizarEstadoSedeAction}>
                           <input type="hidden" name="id" value={sede.id} />
-                          <input type="hidden" name="activa" value={(!sede.activa).toString()} />
+                          <input type="hidden" name="is_active" value={(!sede.is_active).toString()} />
                           <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                            {sede.activa ? "Desactivar" : "Activar"}
+                            {sede.is_active ? "Desactivar" : "Activar"}
                           </button>
                         </form>
                         <form action={deleteSedeAction}>

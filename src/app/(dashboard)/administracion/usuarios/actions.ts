@@ -11,7 +11,7 @@ export async function createUsuarioAction(formData: FormData) {
     role: formData.get("role"),
     documento_numero: formData.get("documento_numero") || undefined,
     phone: formData.get("phone") || undefined,
-    activo: formData.get("activo") === "on",
+    is_active: formData.get("is_active") === "on",
   });
   await createUsuario(input);
   revalidatePath("/administracion/usuarios");
@@ -32,7 +32,7 @@ export async function updateUsuarioAction(formData: FormData) {
 
 export async function actualizarEstadoUsuarioAction(formData: FormData) {
   const id = String(formData.get("id"));
-  const activo = formData.get("activo") === "true";
-  await actualizarEstadoUsuario(id, activo);
+  const isActive = formData.get("is_active") === "true";
+  await actualizarEstadoUsuario(id, isActive);
   revalidatePath("/administracion/usuarios");
 }

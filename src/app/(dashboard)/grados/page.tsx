@@ -35,7 +35,7 @@ export default async function GradosPage() {
                     <Td>{grado.nombre}</Td>
                     <Td>{grado.nivel}</Td>
                     <Td>{grado.orden}</Td>
-                    <Td>{grado.activo ? "Activo" : "Inactivo"}</Td>
+                    <Td>{grado.is_active ? "Activo" : "Inactivo"}</Td>
                     <Td>
                       <div className="flex items-center gap-3">
                         <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${grado.id}`}>
@@ -43,9 +43,9 @@ export default async function GradosPage() {
                         </Link>
                         <ActionForm action={actualizarEstadoGradoAction} className="inline">
                           <input type="hidden" name="id" value={grado.id} />
-                          <input type="hidden" name="activo" value={(!grado.activo).toString()} />
+                          <input type="hidden" name="is_active" value={(!grado.is_active).toString()} />
                           <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                            {grado.activo ? "Desactivar" : "Activar"}
+                            {grado.is_active ? "Desactivar" : "Activar"}
                           </button>
                         </ActionForm>
                         <ActionForm action={deleteGradoAction} confirmMessage="¿Eliminar este grado?" className="inline">

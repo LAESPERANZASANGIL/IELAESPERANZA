@@ -27,7 +27,7 @@ export const usuarioSchema = z.object({
   role: z.enum(["rector", "administrador", "secretaria", "docente", "padre_familia", "estudiante"]),
   documento_numero: z.string().optional(),
   phone: z.string().optional(),
-  activo: z.coerce.boolean().default(true),
+  is_active: z.coerce.boolean().default(true),
 });
 
 export const usuarioUpdateSchema = z.object({
@@ -63,9 +63,9 @@ export async function updateSede(id: string, input: z.infer<typeof sedeSchema>) 
   if (error) throw new Error(error.message);
 }
 
-export async function actualizarEstadoSede(id: string, activa: boolean) {
+export async function actualizarEstadoSede(id: string, isActive: boolean) {
   const supabase = await createClient();
-  const { error } = await supabase.from("sedes").update({ activa }).eq("id", id);
+  const { error } = await supabase.from("sedes").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 
@@ -168,7 +168,7 @@ export async function createUsuario(input: z.infer<typeof usuarioSchema>) {
     role: input.role,
     documento_numero: input.documento_numero || null,
     phone: input.phone || null,
-    activo: input.activo,
+    is_active: input.is_active,
   });
   if (profileError) {
     await admin.auth.admin.deleteUser(created.user.id);
@@ -188,9 +188,9 @@ export async function createUsuario(input: z.infer<typeof usuarioSchema>) {
   }
 }
 
-export async function actualizarEstadoUsuario(id: string, activo: boolean) {
+export async function actualizarEstadoUsuario(id: string, isActive: boolean) {
   const supabase = await createClient();
-  const { error } = await supabase.from("profiles").update({ activo }).eq("id", id);
+  const { error } = await supabase.from("profiles").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 

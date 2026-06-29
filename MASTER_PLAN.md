@@ -255,6 +255,7 @@ ielaesperanza/
 - Toda tabla transaccional tiene `id uuid default gen_random_uuid()`, `created_at`, `updated_at`, y cuando aplica `created_by`/`updated_by` (auditoría mínima).
 - Claves foráneas explícitas con `on delete` pensado caso por caso (`restrict` para datos históricos como notas/pagos, `cascade` solo donde la relación es de composición real, `set null` para relaciones opcionales).
 - Ningún borrado físico de datos académicos o financieros: se usa **soft delete** (`anulado_en`, `anulado_por`, `motivo_anulacion`) o tablas de auditoría, nunca `DELETE` en producción para estos dominios.
+- **Estado activo/inactivo binario:** una sola columna `is_active boolean` (nunca `activo`, `activa`, `enabled` ni `status`). Las tablas con ciclo de vida de 3+ estados (`anios_lectivos`, `periodos_academicos`, `matriculas`, `procesos_matricula`, `solicitudes_admision`) mantienen su propio enum `estado` — no se convierten a `is_active` porque perderían información de negocio. Ver `supabase/migrations/0006_estandarizacion_estado_auditoria.sql` (estandarización aplicada tras la Fase 1).
 
 ### 3.2 Dominios de datos (agrupación lógica)
 
@@ -274,14 +275,14 @@ ielaesperanza/
 
 ```
 sedes
-  id, nombre, codigo_dane, direccion, telefono, activa
+  id, nombre, codigo_dane, direccion, telefono, is_active, created_at, updated_at, created_by, updated_by
 
 anios_lectivos
-  id, anio (int, unique), fecha_inicio, fecha_fin, estado(planeado|activo|cerrado)
+  id, anio (int, unique), fecha_inicio, fecha_fin, estado(planeado|activo|cerrado), created_at, updated_at, created_by, updated_by
 
 profiles  (1:1 con auth.users)
   id (= auth.users.id), role, full_name, email, documento_tipo, documento_numero,
-  phone, avatar_url, sede_id -> sedes, activo, created_at, updated_at
+  phone, avatar_url, sede_id -> sedes, is_active, created_at, updated_at, created_by, updated_by
 
 roles_permisos                          -- permisos finos opcionales sobre el rol base
   id, role, modulo, accion, permitido
@@ -315,11 +316,11 @@ matriculas
 
 ```
 grados
-  id, nombre, nivel(preescolar|primaria|secundaria|media), orden
+  id, nombre, nivel(preescolar|primaria|secundaria|media), orden, is_active, created_at, updated_at, created_by, updated_by
 
 grupos
   id, grado_id -> grados, anio_lectivo_id -> anios_lectivos, nombre, sede_id -> sedes,
-  director_grupo_id -> docentes, capacidad
+  director_grupo_id -> docentes, capacidad, is_active, created_at, updated_at, created_by, updated_by
   unique(grado_id, anio_lectivo_id, nombre)
 
 docentes

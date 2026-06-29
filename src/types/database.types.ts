@@ -33,8 +33,11 @@ export interface Sede {
   codigo_dane: string | null;
   direccion: string | null;
   telefono: string | null;
-  activa: boolean;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface AnioLectivo {
@@ -44,6 +47,9 @@ export interface AnioLectivo {
   fecha_fin: string;
   estado: EstadoAnioLectivo;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Profile {
@@ -56,9 +62,11 @@ export interface Profile {
   documento_numero: string | null;
   avatar_url: string | null;
   sede_id: string | null;
-  activo: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Grado {
@@ -66,8 +74,11 @@ export interface Grado {
   nombre: string;
   nivel: NivelEducativo;
   orden: number;
-  activo: boolean;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Grupo {
@@ -79,8 +90,11 @@ export interface Grupo {
   director_grupo_id: string | null;
   capacidad: number | null;
   jornada: Jornada | null;
-  activo: boolean;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Docente {
@@ -89,6 +103,9 @@ export interface Docente {
   tipo_contrato: string | null;
   fecha_ingreso: string | null;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface InstitucionConfig {
@@ -105,6 +122,8 @@ export interface InstitucionConfig {
   anio_lectivo_activo_id: string | null;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Asignatura {
@@ -113,6 +132,9 @@ export interface Asignatura {
   area: string | null;
   descripcion: string | null;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface PeriodoAcademico {
@@ -124,6 +146,9 @@ export interface PeriodoAcademico {
   fecha_fin: string;
   estado: EstadoPeriodo;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface MallaCurricular {
@@ -133,6 +158,9 @@ export interface MallaCurricular {
   docente_id: string | null;
   intensidad_horaria: number | null;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Estudiante {
@@ -146,6 +174,9 @@ export interface Estudiante {
   genero: string | null;
   estado_general: string;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Acudiente {
@@ -153,6 +184,9 @@ export interface Acudiente {
   ocupacion: string | null;
   lugar_trabajo: string | null;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface EstudianteAcudiente {
@@ -170,6 +204,9 @@ export interface ProcesoMatricula {
   fecha_cierre: string;
   estado: EstadoProcesoMatricula;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface SolicitudAdmision {
@@ -187,6 +224,8 @@ export interface SolicitudAdmision {
   revisado_por: string | null;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Matricula {
@@ -202,6 +241,8 @@ export interface Matricula {
   motivo_retiro: string | null;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface ActividadEvaluacion {
@@ -213,6 +254,9 @@ export interface ActividadEvaluacion {
   tipo: TipoActividad;
   orden: number;
   created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Nota {
@@ -229,6 +273,8 @@ export interface Nota {
   anulado_por: string | null;
   created_at: string;
   updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 export interface Asistencia {

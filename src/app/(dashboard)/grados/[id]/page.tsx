@@ -76,7 +76,7 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
                     <Td>{grupo.nombre}</Td>
                     <Td>{grupo.jornada ?? "—"}</Td>
                     <Td>{grupo.capacidad ?? "—"}</Td>
-                    <Td>{grupo.activo ? "Activo" : "Inactivo"}</Td>
+                    <Td>{grupo.is_active ? "Activo" : "Inactivo"}</Td>
                     <Td>
                       <div className="flex items-center gap-3">
                         <Link
@@ -94,9 +94,9 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
                         <ActionForm action={actualizarEstadoGrupoAction} className="inline">
                           <input type="hidden" name="grado_id" value={id} />
                           <input type="hidden" name="id" value={grupo.id} />
-                          <input type="hidden" name="activo" value={(!grupo.activo).toString()} />
+                          <input type="hidden" name="is_active" value={(!grupo.is_active).toString()} />
                           <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                            {grupo.activo ? "Desactivar" : "Activar"}
+                            {grupo.is_active ? "Desactivar" : "Activar"}
                           </button>
                         </ActionForm>
                         <ActionForm action={deleteGrupoAction} confirmMessage="¿Eliminar este curso?" className="inline">

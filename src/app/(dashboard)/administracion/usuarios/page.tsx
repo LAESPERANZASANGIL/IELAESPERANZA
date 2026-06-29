@@ -34,7 +34,7 @@ export default async function UsuariosPage() {
                     <Td>{usuario.full_name}</Td>
                     <Td>{usuario.email}</Td>
                     <Td>{ROLE_LABELS[usuario.role]}</Td>
-                    <Td>{usuario.activo ? "Activo" : "Inactivo"}</Td>
+                    <Td>{usuario.is_active ? "Activo" : "Inactivo"}</Td>
                     <Td>
                       <div className="flex items-center gap-3">
                         <Link
@@ -45,9 +45,9 @@ export default async function UsuariosPage() {
                         </Link>
                         <form action={actualizarEstadoUsuarioAction}>
                           <input type="hidden" name="id" value={usuario.id} />
-                          <input type="hidden" name="activo" value={(!usuario.activo).toString()} />
+                          <input type="hidden" name="is_active" value={(!usuario.is_active).toString()} />
                           <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                            {usuario.activo ? "Desactivar" : "Activar"}
+                            {usuario.is_active ? "Desactivar" : "Activar"}
                           </button>
                         </form>
                       </div>
@@ -89,7 +89,7 @@ export default async function UsuariosPage() {
               <TextInput id="phone" name="phone" />
             </Field>
             <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" name="activo" defaultChecked />
+              <input type="checkbox" name="is_active" defaultChecked />
               Usuario activo
             </label>
             <SubmitButton>Crear usuario</SubmitButton>
