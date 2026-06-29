@@ -186,6 +186,12 @@ export async function createAsignatura(input: z.infer<typeof asignaturaSchema>) 
   if (error) throw new Error(error.message);
 }
 
+export async function actualizarEstadoAsignatura(id: string, isActive: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("asignaturas").update({ is_active: isActive }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function listPeriodos(anioLectivoId?: string): Promise<PeriodoAcademico[]> {
   const supabase = await createClient();
   let query = supabase.from("periodos_academicos").select("*").order("orden");

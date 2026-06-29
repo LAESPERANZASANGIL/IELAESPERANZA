@@ -131,6 +131,7 @@ export interface Asignatura {
   nombre: string;
   area: string | null;
   descripcion: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -172,7 +173,7 @@ export interface Estudiante {
   apellidos: string;
   fecha_nacimiento: string | null;
   genero: string | null;
-  estado_general: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   created_by: string | null;

@@ -18,7 +18,6 @@ export const estudianteUpdateSchema = z.object({
   documento_numero: z.string().optional(),
   fecha_nacimiento: z.string().optional(),
   genero: z.string().optional(),
-  estado_general: z.enum(["activo", "inactivo", "graduado"]),
 });
 
 export const acudienteSchema = z.object({
@@ -71,9 +70,14 @@ export async function updateEstudiante(id: string, input: z.infer<typeof estudia
       documento_numero: input.documento_numero || null,
       fecha_nacimiento: input.fecha_nacimiento || null,
       genero: input.genero || null,
-      estado_general: input.estado_general,
     })
     .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function actualizarEstadoEstudiante(id: string, isActive: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("estudiantes").update({ is_active: isActive }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 

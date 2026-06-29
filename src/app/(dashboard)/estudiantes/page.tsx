@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/ui/SubmitButton";
 import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listEstudiantes } from "@/modules/estudiantes";
-import { createEstudianteAction } from "./actions";
+import { createEstudianteAction, actualizarEstadoEstudianteAction } from "./actions";
 
 export default async function EstudiantesPage({
   searchParams,
@@ -47,11 +47,20 @@ export default async function EstudiantesPage({
                     <Td>{estudiante.nombres}</Td>
                     <Td>{estudiante.apellidos}</Td>
                     <Td>{estudiante.documento_numero ?? "—"}</Td>
-                    <Td>{estudiante.estado_general}</Td>
+                    <Td>{estudiante.is_active ? "Activo" : "Inactivo"}</Td>
                     <Td>
-                      <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/estudiantes/${estudiante.id}`}>
-                        Ver
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/estudiantes/${estudiante.id}`}>
+                          Ver
+                        </Link>
+                        <ActionForm action={actualizarEstadoEstudianteAction} className="inline">
+                          <input type="hidden" name="id" value={estudiante.id} />
+                          <input type="hidden" name="is_active" value={(!estudiante.is_active).toString()} />
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                            {estudiante.is_active ? "Desactivar" : "Activar"}
+                          </button>
+                        </ActionForm>
+                      </div>
                     </Td>
                   </tr>
                 ))}

@@ -62,13 +62,6 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
               <Field label="Género" htmlFor="genero">
                 <TextInput id="genero" name="genero" defaultValue={estudiante.genero ?? ""} />
               </Field>
-              <Field label="Estado" htmlFor="estado_general">
-                <Select id="estado_general" name="estado_general" defaultValue={estudiante.estado_general}>
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="graduado">Graduado</option>
-                </Select>
-              </Field>
               <div className="sm:col-span-2">
                 <SubmitButton>Guardar cambios</SubmitButton>
               </div>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { estudianteSchema, createEstudiante } from "@/modules/estudiantes";
+import { estudianteSchema, createEstudiante, actualizarEstadoEstudiante } from "@/modules/estudiantes";
 
 export async function createEstudianteAction(formData: FormData) {
   const input = estudianteSchema.parse({
@@ -20,5 +20,12 @@ export async function createEstudianteAction(formData: FormData) {
     }
     throw err;
   }
+  revalidatePath("/estudiantes");
+}
+
+export async function actualizarEstadoEstudianteAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const isActive = formData.get("is_active") === "true";
+  await actualizarEstadoEstudiante(id, isActive);
   revalidatePath("/estudiantes");
 }

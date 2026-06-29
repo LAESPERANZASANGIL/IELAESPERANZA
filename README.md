@@ -77,7 +77,9 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 Todas las tablas principales (`sedes`, `profiles`, `grados`, `grupos`, `asignaturas`, `docentes`, `estudiantes`, `acudientes`, `matriculas`, `periodos_academicos`, `anios_lectivos`, `malla_curricular`, `actividades_evaluacion`, `notas`, `institucion_config`, `procesos_matricula`, `solicitudes_admision`) tienen `created_at`, `updated_at`, `created_by` y `updated_by`, completados automáticamente por el trigger `set_audit_fields()` (ver `supabase/migrations/0006_estandarizacion_estado_auditoria.sql`).
 
-Para estado activo/inactivo binario se usa exclusivamente la columna `is_active` (booleano) en `sedes`, `profiles`, `grados` y `grupos`. No usar `activo`, `activa`, `enabled` ni `status` para este fin. Las tablas con ciclo de vida de más de dos estados (`anios_lectivos`, `periodos_academicos`, `matriculas`, `procesos_matricula`, `solicitudes_admision`, `asistencia`, `certificados`) conservan su columna `estado` con su propio enum — no son binarias y no deben forzarse a `is_active`.
+Para estado activo/inactivo binario se usa exclusivamente la columna `is_active` (booleano) en las entidades de activación simple: `sedes`, `profiles`, `grados`, `grupos`, `asignaturas` y `estudiantes` (ver `supabase/migrations/0007_is_active_asignaturas_estudiantes.sql`). Los docentes no tienen columna propia: su estado se hereda de `profiles.is_active` (`docentes.id` referencia `profiles.id` 1:1). No usar `activo`, `activa`, `estado_general`, `enabled` ni `status` para este fin.
+
+Las entidades con ciclo de vida de más de dos estados (`anios_lectivos`, `periodos_academicos`, `matriculas`, `procesos_matricula`, `solicitudes_admision`, `asistencia`, `certificados`) conservan su columna `estado` con su propio enum — no son binarias y no deben forzarse a `is_active`.
 
 ## Próximos pasos
 

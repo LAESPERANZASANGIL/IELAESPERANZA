@@ -327,7 +327,7 @@ docentes
   id (= profiles.id), especialidad, fecha_ingreso, tipo_contrato
 
 asignaturas
-  id, nombre, area, descripcion
+  id, nombre, area, descripcion, is_active, created_at, updated_at, created_by, updated_by
 
 periodos_academicos
   id, anio_lectivo_id -> anios_lectivos, nombre, orden, fecha_inicio, fecha_fin, estado(planeado|activo|cerrado)
@@ -339,8 +339,10 @@ malla_curricular  (antes "asignaturas_grupo")
 
 estudiantes
   id (= profiles.id si tiene cuenta propia, o id independiente si el estudiante no inicia sesión),
-  fecha_nacimiento, genero, estado_general(activo|inactivo|graduado), created_at
+  fecha_nacimiento, genero, is_active, created_at, updated_at, created_by, updated_by
   -- NOTA: ya NO tiene grupo_id directo; el grupo vigente se resuelve vía matriculas + anio_lectivo activo
+  -- NOTA: el ciclo activa/retirada/trasladada/graduada vive en matriculas.estado por año lectivo;
+  --       is_active aquí es solo activación simple del registro de la persona.
 
 acudientes
   id (= profiles.id), ocupacion, lugar_trabajo

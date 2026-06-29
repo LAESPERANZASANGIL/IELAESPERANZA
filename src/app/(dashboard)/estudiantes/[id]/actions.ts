@@ -13,7 +13,6 @@ export async function updateEstudianteAction(formData: FormData) {
     documento_numero: formData.get("documento_numero") || undefined,
     fecha_nacimiento: formData.get("fecha_nacimiento") || undefined,
     genero: formData.get("genero") || undefined,
-    estado_general: formData.get("estado_general"),
   });
   await updateEstudiante(id, input);
   revalidatePath(`/estudiantes/${id}`);

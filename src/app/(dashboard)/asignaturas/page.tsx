@@ -2,9 +2,10 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, TextArea } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listAsignaturas } from "@/modules/academico";
-import { createAsignaturaAction } from "./actions";
+import { createAsignaturaAction, actualizarEstadoAsignaturaAction } from "./actions";
 
 export default async function AsignaturasPage() {
   const asignaturas = await listAsignaturas();
@@ -22,6 +23,8 @@ export default async function AsignaturasPage() {
                 <Th>Nombre</Th>
                 <Th>Área</Th>
                 <Th>Descripción</Th>
+                <Th>Estado</Th>
+                <Th>{""}</Th>
               </Thead>
               <Tbody>
                 {asignaturas.map((asignatura) => (
@@ -29,6 +32,16 @@ export default async function AsignaturasPage() {
                     <Td>{asignatura.nombre}</Td>
                     <Td>{asignatura.area ?? "—"}</Td>
                     <Td>{asignatura.descripcion ?? "—"}</Td>
+                    <Td>{asignatura.is_active ? "Activo" : "Inactivo"}</Td>
+                    <Td>
+                      <ActionForm action={actualizarEstadoAsignaturaAction} className="inline">
+                        <input type="hidden" name="id" value={asignatura.id} />
+                        <input type="hidden" name="is_active" value={(!asignatura.is_active).toString()} />
+                        <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                          {asignatura.is_active ? "Desactivar" : "Activar"}
+                        </button>
+                      </ActionForm>
+                    </Td>
                   </tr>
                 ))}
               </Tbody>
