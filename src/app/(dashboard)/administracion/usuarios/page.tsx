@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
@@ -34,13 +35,21 @@ export default async function UsuariosPage() {
                     <Td>{ROLE_LABELS[usuario.role]}</Td>
                     <Td>{usuario.activo ? "Activo" : "Inactivo"}</Td>
                     <Td>
-                      <form action={actualizarEstadoUsuarioAction}>
-                        <input type="hidden" name="id" value={usuario.id} />
-                        <input type="hidden" name="activo" value={(!usuario.activo).toString()} />
-                        <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                          {usuario.activo ? "Desactivar" : "Activar"}
-                        </button>
-                      </form>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/administracion/usuarios/${usuario.id}`}
+                          className="text-sm font-medium text-brand-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
+                        <form action={actualizarEstadoUsuarioAction}>
+                          <input type="hidden" name="id" value={usuario.id} />
+                          <input type="hidden" name="activo" value={(!usuario.activo).toString()} />
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                            {usuario.activo ? "Desactivar" : "Activar"}
+                          </button>
+                        </form>
+                      </div>
                     </Td>
                   </tr>
                 ))}

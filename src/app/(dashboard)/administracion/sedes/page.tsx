@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listSedes } from "@/modules/core";
-import { createSedeAction } from "./actions";
+import { createSedeAction, actualizarEstadoSedeAction, deleteSedeAction } from "./actions";
 
 export default async function SedesPage() {
   const sedes = await listSedes();
@@ -23,6 +24,8 @@ export default async function SedesPage() {
                 <Th>Código DANE</Th>
                 <Th>Dirección</Th>
                 <Th>Teléfono</Th>
+                <Th>Estado</Th>
+                <Th>Acción</Th>
               </Thead>
               <Tbody>
                 {sedes.map((sede) => (
@@ -31,6 +34,30 @@ export default async function SedesPage() {
                     <Td>{sede.codigo_dane ?? "—"}</Td>
                     <Td>{sede.direccion ?? "—"}</Td>
                     <Td>{sede.telefono ?? "—"}</Td>
+                    <Td>{sede.activa ? "Activa" : "Inactiva"}</Td>
+                    <Td>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/administracion/sedes/${sede.id}`}
+                          className="text-sm font-medium text-brand-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
+                        <form action={actualizarEstadoSedeAction}>
+                          <input type="hidden" name="id" value={sede.id} />
+                          <input type="hidden" name="activa" value={(!sede.activa).toString()} />
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                            {sede.activa ? "Desactivar" : "Activar"}
+                          </button>
+                        </form>
+                        <form action={deleteSedeAction}>
+                          <input type="hidden" name="id" value={sede.id} />
+                          <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                            Eliminar
+                          </button>
+                        </form>
+                      </div>
+                    </Td>
                   </tr>
                 ))}
               </Tbody>

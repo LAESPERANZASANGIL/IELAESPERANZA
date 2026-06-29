@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listAniosLectivos } from "@/modules/core";
-import { createAnioLectivoAction, activarAnioLectivoAction } from "./actions";
+import { createAnioLectivoAction, activarAnioLectivoAction, deleteAnioLectivoAction } from "./actions";
 
 export default async function AniosLectivosPage() {
   const anios = await listAniosLectivos();
@@ -33,14 +34,30 @@ export default async function AniosLectivosPage() {
                     <Td>{anio.fecha_fin}</Td>
                     <Td>{anio.estado}</Td>
                     <Td>
-                      {anio.estado !== "activo" && (
-                        <form action={activarAnioLectivoAction}>
-                          <input type="hidden" name="id" value={anio.id} />
-                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
-                            Activar
-                          </button>
-                        </form>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/administracion/anios-lectivos/${anio.id}`}
+                          className="text-sm font-medium text-brand-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
+                        {anio.estado !== "activo" && (
+                          <form action={activarAnioLectivoAction}>
+                            <input type="hidden" name="id" value={anio.id} />
+                            <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                              Activar
+                            </button>
+                          </form>
+                        )}
+                        {anio.estado !== "activo" && (
+                          <form action={deleteAnioLectivoAction}>
+                            <input type="hidden" name="id" value={anio.id} />
+                            <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                              Eliminar
+                            </button>
+                          </form>
+                        )}
+                      </div>
                     </Td>
                   </tr>
                 ))}

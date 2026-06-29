@@ -28,6 +28,13 @@ export const usuarioSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const usuarioUpdateSchema = z.object({
+  full_name: z.string().min(2, "El nombre es obligatorio"),
+  role: z.enum(["rector", "administrador", "secretaria", "docente", "padre_familia", "estudiante"]),
+  documento_numero: z.string().optional(),
+  phone: z.string().optional(),
+});
+
 export async function listSedes(): Promise<Sede[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("sedes").select("*").order("nombre");
@@ -35,10 +42,35 @@ export async function listSedes(): Promise<Sede[]> {
   return data as Sede[];
 }
 
+export async function getSede(id: string): Promise<Sede | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("sedes").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as Sede | null;
+}
+
 export async function createSede(input: z.infer<typeof sedeSchema>) {
   const supabase = await createClient();
   const { error } = await supabase.from("sedes").insert(input);
   if (error) throw new Error(error.message);
+}
+
+export async function updateSede(id: string, input: z.infer<typeof sedeSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("sedes").update(input).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function actualizarEstadoSede(id: string, activa: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("sedes").update({ activa }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteSede(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("sedes").delete().eq("id", id);
+  if (error) throw new Error("No se puede eliminar: la sede tiene grupos u otros registros asociados.");
 }
 
 export async function listAniosLectivos(): Promise<AnioLectivo[]> {
@@ -48,9 +80,22 @@ export async function listAniosLectivos(): Promise<AnioLectivo[]> {
   return data as AnioLectivo[];
 }
 
+export async function getAnioLectivo(id: string): Promise<AnioLectivo | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("anios_lectivos").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as AnioLectivo | null;
+}
+
 export async function createAnioLectivo(input: z.infer<typeof anioLectivoSchema>) {
   const supabase = await createClient();
   const { error } = await supabase.from("anios_lectivos").insert(input);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateAnioLectivo(id: string, input: z.infer<typeof anioLectivoSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("anios_lectivos").update(input).eq("id", id);
   if (error) throw new Error(error.message);
 }
 
@@ -58,6 +103,16 @@ export async function activarAnioLectivo(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("anios_lectivos").update({ estado: "activo" }).eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+export async function deleteAnioLectivo(id: string) {
+  const supabase = await createClient();
+  const { data: anio } = await supabase.from("anios_lectivos").select("estado").eq("id", id).maybeSingle();
+  if (anio?.estado === "activo") {
+    throw new Error("No se puede eliminar un año lectivo activo.");
+  }
+  const { error } = await supabase.from("anios_lectivos").delete().eq("id", id);
+  if (error) throw new Error("No se puede eliminar: el año lectivo tiene matrículas u otros registros asociados.");
 }
 
 export async function getAnioLectivoActivo(): Promise<AnioLectivo | null> {
@@ -105,5 +160,26 @@ export async function createUsuario(input: z.infer<typeof usuarioSchema>) {
 export async function actualizarEstadoUsuario(id: string, activo: boolean) {
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ activo }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function getUsuario(id: string): Promise<Profile | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as Profile | null;
+}
+
+export async function updateUsuario(id: string, input: z.infer<typeof usuarioUpdateSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: input.full_name,
+      role: input.role,
+      documento_numero: input.documento_numero || null,
+      phone: input.phone || null,
+    })
+    .eq("id", id);
   if (error) throw new Error(error.message);
 }
