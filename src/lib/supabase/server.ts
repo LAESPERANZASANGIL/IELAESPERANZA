@@ -23,6 +23,13 @@ export async function createClient() {
           }
         },
       },
+      global: {
+        // Evita que Next.js cachee las respuestas de PostgREST: sin esto,
+        // consultas sin filtros (p. ej. listar todos los grupos) pueden
+        // quedar congeladas con datos obsoletos mientras consultas filtradas
+        // (con distinta cache key) sí reflejan los datos actuales.
+        fetch: (url, options) => fetch(url, { ...(options ?? {}), cache: "no-store" }),
+      },
     },
   );
 }
