@@ -5,7 +5,12 @@ import { Field, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listAniosLectivos } from "@/modules/core";
-import { createAnioLectivoAction, activarAnioLectivoAction, deleteAnioLectivoAction } from "./actions";
+import {
+  createAnioLectivoAction,
+  activarAnioLectivoAction,
+  cerrarAnioLectivoAction,
+  deleteAnioLectivoAction,
+} from "./actions";
 
 export default async function AniosLectivosPage() {
   const anios = await listAniosLectivos();
@@ -46,6 +51,14 @@ export default async function AniosLectivosPage() {
                             <input type="hidden" name="id" value={anio.id} />
                             <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
                               Activar
+                            </button>
+                          </form>
+                        )}
+                        {anio.estado === "activo" && (
+                          <form action={cerrarAnioLectivoAction}>
+                            <input type="hidden" name="id" value={anio.id} />
+                            <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                              Cerrar
                             </button>
                           </form>
                         )}

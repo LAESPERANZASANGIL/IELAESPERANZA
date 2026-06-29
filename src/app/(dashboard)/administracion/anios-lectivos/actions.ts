@@ -6,6 +6,7 @@ import {
   createAnioLectivo,
   updateAnioLectivo,
   activarAnioLectivo,
+  cerrarAnioLectivo,
   deleteAnioLectivo,
 } from "@/modules/core";
 
@@ -34,6 +35,12 @@ export async function updateAnioLectivoAction(formData: FormData) {
 export async function activarAnioLectivoAction(formData: FormData) {
   const id = String(formData.get("id"));
   await activarAnioLectivo(id);
+  revalidatePath("/administracion/anios-lectivos");
+}
+
+export async function cerrarAnioLectivoAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  await cerrarAnioLectivo(id);
   revalidatePath("/administracion/anios-lectivos");
 }
 

@@ -103,7 +103,20 @@ export async function updateAnioLectivo(id: string, input: z.infer<typeof anioLe
 
 export async function activarAnioLectivo(id: string) {
   const supabase = await createClient();
+  const { error: demoteError } = await supabase
+    .from("anios_lectivos")
+    .update({ estado: "cerrado" })
+    .eq("estado", "activo")
+    .neq("id", id);
+  if (demoteError) throw new Error(demoteError.message);
+
   const { error } = await supabase.from("anios_lectivos").update({ estado: "activo" }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function cerrarAnioLectivo(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("anios_lectivos").update({ estado: "cerrado" }).eq("id", id);
   if (error) throw new Error(error.message);
 }
 
