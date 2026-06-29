@@ -25,6 +25,7 @@ export type EstadoCertificado =
 export type TipoCertificado = "estudio" | "conducta" | "notas" | "paz_y_salvo";
 export type NivelEducativo = "preescolar" | "primaria" | "secundaria" | "media";
 export type Jornada = "mañana" | "tarde" | "noche";
+export type TipoActividad = "normal" | "recuperacion" | "nivelacion";
 
 export interface Sede {
   id: string;
@@ -203,10 +204,15 @@ export interface Matricula {
   updated_at: string;
 }
 
-export interface TipoEvaluacion {
+export interface ActividadEvaluacion {
   id: string;
+  malla_curricular_id: string;
+  periodo_academico_id: string;
   nombre: string;
-  peso_porcentual: number | null;
+  peso_porcentual: number;
+  tipo: TipoActividad;
+  orden: number;
+  created_at: string;
 }
 
 export interface Nota {
@@ -214,9 +220,10 @@ export interface Nota {
   matricula_id: string;
   malla_curricular_id: string;
   periodo_academico_id: string;
-  tipo_evaluacion_id: string | null;
+  actividad_id: string | null;
   valor: number;
   descripcion: string | null;
+  observacion: string | null;
   docente_id: string | null;
   anulado_en: string | null;
   anulado_por: string | null;

@@ -2,11 +2,13 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, Select, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listGrupos, listMallaCurricular, listPeriodos } from "@/modules/academico";
 import { listAniosLectivos } from "@/modules/core";
-import { listPlanilla, calcularPromedio, calcularDesempeno } from "@/modules/calificaciones";
-import { guardarNotasAction, createTipoEvaluacionAction } from "./actions";
+import { listPlanilla } from "@/modules/calificaciones";
+import { requireProfile } from "@/lib/auth/session";
+import { guardarNotasAction, crearActividadAction, eliminarActividadAction } from "./actions";
 
 export default async function NotasPage({
   searchParams,
@@ -14,6 +16,9 @@ export default async function NotasPage({
   searchParams: Promise<{ anio_lectivo_id?: string; grupo_id?: string; malla_curricular_id?: string; periodo_academico_id?: string }>;
 }) {
   const params = await searchParams;
+  const profile = await requireProfile();
+  const esConfigurador = ["rector", "administrador", "secretaria"].includes(profile.role);
+
   const anios = await listAniosLectivos();
   const anioLectivoId = params.anio_lectivo_id || anios.find((a) => a.estado === "activo")?.id || anios[0]?.id;
 
@@ -26,6 +31,10 @@ export default async function NotasPage({
   const mallas = grupoId ? await listMallaCurricular(grupoId) : [];
   const mallaCurricularId = params.malla_curricular_id || mallas[0]?.id;
   const periodoAcademicoId = params.periodo_academico_id || periodos.find((p) => p.estado === "activo")?.id || periodos[0]?.id;
+
+  const mallaSeleccionada = mallas.find((m) => m.id === mallaCurricularId);
+  const esDocenteAsignado = profile.role === "docente" && mallaSeleccionada?.docente_id === profile.id;
+  const puedeRegistrarNotas = esDocenteAsignado;
 
   const planilla = mallaCurricularId && periodoAcademicoId ? await listPlanilla(mallaCurricularId, periodoAcademicoId) : null;
 
@@ -65,7 +74,7 @@ export default async function NotasPage({
             <Select id="periodo_academico_id" name="periodo_academico_id" defaultValue={periodoAcademicoId ?? ""}>
               {periodos.map((periodo) => (
                 <option key={periodo.id} value={periodo.id}>
-                  {periodo.nombre}
+                  {periodo.nombre} {periodo.estado === "cerrado" ? "(cerrado)" : ""}
                 </option>
               ))}
             </Select>
@@ -80,78 +89,155 @@ export default async function NotasPage({
             title="Selecciona curso, asignatura y periodo"
             description="Define grados, cursos, asignaturas y periodos antes de registrar notas."
           />
-        ) : planilla.periodo.estado === "cerrado" ? (
-          <EmptyState
-            title="Este periodo está cerrado"
-            description="No se pueden registrar ni modificar notas de un periodo cerrado."
-          />
         ) : planilla.estudiantes.length === 0 ? (
           <EmptyState title="Este curso no tiene estudiantes matriculados en este año lectivo" />
-        ) : planilla.tiposEvaluacion.length === 0 ? (
-          <div className="max-w-md rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">Crea un tipo de evaluación</h2>
-            <p className="mb-4 text-sm text-slate-500">
-              Aún no hay tipos de evaluación (ej. Talleres, Examen). Crea al menos uno antes de registrar notas.
-            </p>
-            <form action={createTipoEvaluacionAction} className="space-y-4">
-              <Field label="Nombre" htmlFor="nombre">
-                <TextInput id="nombre" name="nombre" required />
-              </Field>
-              <Field label="Peso porcentual (opcional)" htmlFor="peso_porcentual">
-                <TextInput id="peso_porcentual" name="peso_porcentual" type="number" min={0} max={100} />
-              </Field>
-              <SubmitButton>Crear tipo de evaluación</SubmitButton>
-            </form>
-          </div>
         ) : (
-          <form action={guardarNotasAction}>
-            <input type="hidden" name="malla_curricular_id" value={mallaCurricularId} />
-            <input type="hidden" name="periodo_academico_id" value={periodoAcademicoId} />
-            <Table>
-              <Thead>
-                <Th>Estudiante</Th>
-                {planilla.tiposEvaluacion.map((tipo) => (
-                  <Th key={tipo.id}>
-                    {tipo.nombre}
-                    {tipo.peso_porcentual ? ` (${tipo.peso_porcentual}%)` : ""}
-                  </Th>
-                ))}
-                <Th>Promedio</Th>
-                <Th>Desempeño</Th>
-              </Thead>
-              <Tbody>
-                {planilla.estudiantes.map((fila) => {
-                  const promedio = calcularPromedio(fila.notas, planilla.tiposEvaluacion);
-                  const notaPorTipo = new Map(fila.notas.map((n) => [n.tipo_evaluacion_id, n.valor]));
-                  return (
-                    <tr key={fila.matricula_id}>
-                      <Td>
-                        {fila.estudiante.apellidos} {fila.estudiante.nombres}
-                      </Td>
-                      {planilla.tiposEvaluacion.map((tipo) => (
-                        <Td key={tipo.id}>
-                          <TextInput
-                            type="number"
-                            step="0.1"
-                            min={0}
-                            max={5}
-                            name={`nota__${fila.matricula_id}__${tipo.id}`}
-                            defaultValue={notaPorTipo.get(tipo.id) ?? ""}
-                            className="w-20"
-                          />
-                        </Td>
+          <>
+            {esConfigurador && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-900">
+                  Actividades de evaluación de esta asignatura y periodo
+                </h2>
+                <p className="mb-4 text-sm text-slate-500">
+                  Configura aquí las actividades (ej. Talleres, Examen, Recuperación) y su peso porcentual antes de
+                  que el docente registre notas. Los pesos no necesitan sumar exactamente 100, pero se recomienda.
+                </p>
+                {planilla.actividades.length > 0 && (
+                  <Table>
+                    <Thead>
+                      <Th>Nombre</Th>
+                      <Th>Peso %</Th>
+                      <Th>Tipo</Th>
+                      <Th>{""}</Th>
+                    </Thead>
+                    <Tbody>
+                      {planilla.actividades.map((actividad) => (
+                        <tr key={actividad.id}>
+                          <Td>{actividad.nombre}</Td>
+                          <Td>{actividad.peso_porcentual}%</Td>
+                          <Td>{actividad.tipo}</Td>
+                          <Td>
+                            <ActionForm
+                              action={eliminarActividadAction}
+                              confirmMessage="¿Eliminar esta actividad?"
+                              className="inline"
+                            >
+                              <input type="hidden" name="id" value={actividad.id} />
+                              <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                                Eliminar
+                              </button>
+                            </ActionForm>
+                          </Td>
+                        </tr>
                       ))}
-                      <Td>{promedio ?? "—"}</Td>
-                      <Td>{promedio === null ? "—" : calcularDesempeno(promedio)}</Td>
-                    </tr>
-                  );
-                })}
-              </Tbody>
-            </Table>
-            <div className="mt-4">
-              <SubmitButton>Guardar notas</SubmitButton>
-            </div>
-          </form>
+                    </Tbody>
+                  </Table>
+                )}
+                <ActionForm action={crearActividadAction} className="mt-4 grid gap-4 sm:grid-cols-5">
+                  <input type="hidden" name="malla_curricular_id" value={mallaCurricularId} />
+                  <input type="hidden" name="periodo_academico_id" value={periodoAcademicoId} />
+                  <Field label="Nombre" htmlFor="nombre">
+                    <TextInput id="nombre" name="nombre" required />
+                  </Field>
+                  <Field label="Peso %" htmlFor="peso_porcentual">
+                    <TextInput id="peso_porcentual" name="peso_porcentual" type="number" min={0} max={100} required />
+                  </Field>
+                  <Field label="Tipo" htmlFor="tipo">
+                    <Select id="tipo" name="tipo" defaultValue="normal">
+                      <option value="normal">Normal</option>
+                      <option value="recuperacion">Recuperación</option>
+                      <option value="nivelacion">Nivelación</option>
+                    </Select>
+                  </Field>
+                  <Field label="Orden" htmlFor="orden">
+                    <TextInput id="orden" name="orden" type="number" defaultValue={0} />
+                  </Field>
+                  <div className="flex items-end">
+                    <SubmitButton>Agregar actividad</SubmitButton>
+                  </div>
+                </ActionForm>
+              </div>
+            )}
+
+            {planilla.periodo.estado === "cerrado" && (
+              <EmptyState
+                title="Este periodo está cerrado"
+                description="No se pueden registrar ni modificar notas. Solo el Rector o el Administrador pueden reabrirlo desde Periodos académicos."
+              />
+            )}
+
+            {planilla.actividades.length === 0 ? (
+              <EmptyState
+                title="Aún no hay actividades de evaluación configuradas"
+                description="El Rector, el Administrador o la Secretaría deben configurar al menos una actividad antes de que el docente pueda registrar notas."
+              />
+            ) : (
+              <ActionForm action={guardarNotasAction}>
+                <input type="hidden" name="malla_curricular_id" value={mallaCurricularId} />
+                <input type="hidden" name="periodo_academico_id" value={periodoAcademicoId} />
+                {puedeRegistrarNotas && (
+                  <div className="mb-4 max-w-md">
+                    <Field label="Motivo del registro/cambio (opcional, queda en la auditoría)" htmlFor="motivo">
+                      <TextInput id="motivo" name="motivo" placeholder="Ej. corrección de digitación" />
+                    </Field>
+                  </div>
+                )}
+                <Table>
+                  <Thead>
+                    <Th>Estudiante</Th>
+                    {planilla.actividades.map((actividad) => (
+                      <Th key={actividad.id}>
+                        {actividad.nombre} ({actividad.peso_porcentual}%)
+                      </Th>
+                    ))}
+                    <Th>Promedio</Th>
+                    <Th>Desempeño</Th>
+                  </Thead>
+                  <Tbody>
+                    {planilla.estudiantes.map((fila) => {
+                      const notaPorActividad = new Map(fila.notas.map((n) => [n.actividad_id, n.valor]));
+                      return (
+                        <tr key={fila.matricula_id}>
+                          <Td>
+                            {fila.estudiante.apellidos} {fila.estudiante.nombres}
+                          </Td>
+                          {planilla.actividades.map((actividad) => (
+                            <Td key={actividad.id}>
+                              {puedeRegistrarNotas && planilla.periodo.estado !== "cerrado" ? (
+                                <TextInput
+                                  type="number"
+                                  step="0.1"
+                                  min={0}
+                                  max={5}
+                                  name={`nota__${fila.matricula_id}__${actividad.id}`}
+                                  defaultValue={notaPorActividad.get(actividad.id) ?? ""}
+                                  className="w-20"
+                                />
+                              ) : (
+                                <span>{notaPorActividad.get(actividad.id) ?? "—"}</span>
+                              )}
+                            </Td>
+                          ))}
+                          <Td>{fila.promedio ?? "—"}</Td>
+                          <Td>{fila.desempeno ?? "—"}</Td>
+                        </tr>
+                      );
+                    })}
+                  </Tbody>
+                </Table>
+                {puedeRegistrarNotas && planilla.periodo.estado !== "cerrado" && (
+                  <div className="mt-4">
+                    <SubmitButton>Guardar notas</SubmitButton>
+                  </div>
+                )}
+                {!puedeRegistrarNotas && profile.role === "docente" && (
+                  <p className="mt-4 text-sm text-slate-500">
+                    Solo puedes registrar notas en las asignaturas que tienes asignadas en la malla curricular.
+                  </p>
+                )}
+              </ActionForm>
+            )}
+          </>
         )}
       </main>
     </>

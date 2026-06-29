@@ -2,14 +2,18 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPeriodos } from "@/modules/academico";
 import { listAniosLectivos } from "@/modules/core";
-import { createPeriodoAction } from "./actions";
+import { requireProfile } from "@/lib/auth/session";
+import { createPeriodoAction, cerrarPeriodoAction, reabrirPeriodoAction } from "./actions";
 
 export default async function PeriodosPage() {
-  const [periodos, anios] = await Promise.all([listPeriodos(), listAniosLectivos()]);
+  const [periodos, anios, profile] = await Promise.all([listPeriodos(), listAniosLectivos(), requireProfile()]);
   const anioPorId = new Map(anios.map((anio) => [anio.id, anio]));
+  const puedeCerrar = ["rector", "administrador", "secretaria"].includes(profile.role);
+  const puedeReabrir = ["rector", "administrador"].includes(profile.role);
 
   return (
     <>
@@ -26,6 +30,7 @@ export default async function PeriodosPage() {
                 <Th>Inicio</Th>
                 <Th>Fin</Th>
                 <Th>Estado</Th>
+                <Th>{""}</Th>
               </Thead>
               <Tbody>
                 {periodos.map((periodo) => (
@@ -35,6 +40,32 @@ export default async function PeriodosPage() {
                     <Td>{periodo.fecha_inicio}</Td>
                     <Td>{periodo.fecha_fin}</Td>
                     <Td>{periodo.estado}</Td>
+                    <Td>
+                      {periodo.estado !== "cerrado" && puedeCerrar && (
+                        <ActionForm
+                          action={cerrarPeriodoAction}
+                          confirmMessage="¿Cerrar este periodo? No se podrán registrar más notas hasta que se reabra."
+                          className="inline"
+                        >
+                          <input type="hidden" name="id" value={periodo.id} />
+                          <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                            Cerrar
+                          </button>
+                        </ActionForm>
+                      )}
+                      {periodo.estado === "cerrado" && puedeReabrir && (
+                        <ActionForm
+                          action={reabrirPeriodoAction}
+                          confirmMessage="¿Reabrir este periodo cerrado?"
+                          className="inline"
+                        >
+                          <input type="hidden" name="id" value={periodo.id} />
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                            Reabrir
+                          </button>
+                        </ActionForm>
+                      )}
+                    </Td>
                   </tr>
                 ))}
               </Tbody>

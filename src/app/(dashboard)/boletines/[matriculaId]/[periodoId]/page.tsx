@@ -10,9 +10,7 @@ export default async function BoletinPage({
 }) {
   const { matriculaId, periodoId } = await params;
   const boletin = await calcularBoletin(matriculaId, periodoId);
-
-  const promedios = boletin.asignaturas.map((a) => a.promedio).filter((p): p is number => p !== null);
-  const promedioGeneral = promedios.length > 0 ? Math.round((promedios.reduce((a, b) => a + b, 0) / promedios.length) * 100) / 100 : null;
+  const { promedioGeneral } = boletin;
 
   return (
     <>

@@ -201,6 +201,32 @@ export async function createPeriodo(input: z.infer<typeof periodoSchema>) {
   if (error) throw new Error(error.message);
 }
 
+export async function cambiarEstadoPeriodo(
+  id: string,
+  nuevoEstado: "planeado" | "activo" | "cerrado",
+  profileId: string,
+) {
+  const supabase = await createClient();
+  const { data: anterior, error: getError } = await supabase
+    .from("periodos_academicos")
+    .select("estado")
+    .eq("id", id)
+    .single();
+  if (getError) throw new Error(getError.message);
+
+  const { error } = await supabase.from("periodos_academicos").update({ estado: nuevoEstado }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await supabase.from("logs_auditoria").insert({
+    profile_id: profileId,
+    tabla: "periodos_academicos",
+    registro_id: id,
+    accion: "cambiar_estado",
+    datos_antes: { estado: anterior.estado },
+    datos_despues: { estado: nuevoEstado },
+  });
+}
+
 export async function listMallaCurricular(grupoId: string): Promise<(MallaCurricular & { asignatura: Asignatura; docente: (Docente & { profile: Profile }) | null })[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
