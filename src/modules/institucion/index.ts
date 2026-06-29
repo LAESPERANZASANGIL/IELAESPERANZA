@@ -45,3 +45,21 @@ export async function upsertInstitucionConfig(input: z.infer<typeof institucionC
   });
   if (error) throw new Error(error.message);
 }
+
+export async function resetInstitucionConfig() {
+  const supabase = await createClient();
+  const { error } = await supabase.from("institucion_config").upsert({
+    id: INSTITUCION_CONFIG_ID,
+    nombre: "Sin configurar",
+    nit: null,
+    codigo_dane: null,
+    direccion: null,
+    telefono: null,
+    correo: null,
+    rector_id: null,
+    escudo_url: null,
+    logo_url: null,
+    anio_lectivo_activo_id: null,
+  });
+  if (error) throw new Error(error.message);
+}

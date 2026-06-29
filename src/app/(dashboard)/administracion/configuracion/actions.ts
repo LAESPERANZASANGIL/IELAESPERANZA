@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { institucionConfigSchema, upsertInstitucionConfig } from "@/modules/institucion";
+import { institucionConfigSchema, upsertInstitucionConfig, resetInstitucionConfig } from "@/modules/institucion";
 
 export async function updateInstitucionConfigAction(formData: FormData) {
   const input = institucionConfigSchema.parse({
@@ -17,5 +17,10 @@ export async function updateInstitucionConfigAction(formData: FormData) {
     anio_lectivo_activo_id: formData.get("anio_lectivo_activo_id") || undefined,
   });
   await upsertInstitucionConfig(input);
+  revalidatePath("/administracion/configuracion");
+}
+
+export async function resetInstitucionConfigAction() {
+  await resetInstitucionConfig();
   revalidatePath("/administracion/configuracion");
 }

@@ -3,7 +3,7 @@ import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { getInstitucionConfig } from "@/modules/institucion";
 import { listProfiles, listAniosLectivos } from "@/modules/core";
-import { updateInstitucionConfigAction } from "./actions";
+import { updateInstitucionConfigAction, resetInstitucionConfigAction } from "./actions";
 
 export default async function ConfiguracionInstitucionalPage() {
   const [config, rectores, anios] = await Promise.all([
@@ -68,8 +68,20 @@ export default async function ConfiguracionInstitucionalPage() {
                 <TextInput id="logo_url" name="logo_url" type="url" defaultValue={config?.logo_url ?? ""} />
               </Field>
             </div>
-            <SubmitButton>Guardar configuración</SubmitButton>
+            <div className="flex items-center gap-4">
+              <SubmitButton>Guardar configuración</SubmitButton>
+            </div>
           </form>
+          {config && (
+            <form action={resetInstitucionConfigAction} className="mt-4 border-t border-slate-200 pt-4">
+              <button
+                type="submit"
+                className="text-sm font-medium text-red-600 hover:underline"
+              >
+                Eliminar / restablecer configuración
+              </button>
+            </form>
+          )}
         </section>
       </main>
     </>
