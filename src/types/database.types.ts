@@ -64,6 +64,7 @@ export interface Profile {
   sede_id: string | null;
   is_active: boolean;
   must_change_password: boolean;
+  last_login_at: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;
