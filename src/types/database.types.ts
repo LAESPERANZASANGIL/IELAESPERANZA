@@ -65,6 +65,7 @@ export interface Grado {
   nombre: string;
   nivel: NivelEducativo;
   orden: number;
+  activo: boolean;
   created_at: string;
 }
 
@@ -77,6 +78,7 @@ export interface Grupo {
   director_grupo_id: string | null;
   capacidad: number | null;
   jornada: Jornada | null;
+  activo: boolean;
   created_at: string;
 }
 

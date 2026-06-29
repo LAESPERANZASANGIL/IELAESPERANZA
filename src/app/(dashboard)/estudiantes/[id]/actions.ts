@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { vincularAcudienteSchema, vincularAcudiente, estudianteUpdateSchema, updateEstudiante } from "@/modules/estudiantes";
+import { vincularAcudienteSchema, vincularAcudiente, estudianteUpdateSchema, updateEstudiante, deleteEstudiante } from "@/modules/estudiantes";
 import { matriculaSchema, createMatriculaDirecta, retirarMatricula } from "@/modules/matricula";
 
 export async function updateEstudianteAction(formData: FormData) {
@@ -17,6 +17,12 @@ export async function updateEstudianteAction(formData: FormData) {
   });
   await updateEstudiante(id, input);
   revalidatePath(`/estudiantes/${id}`);
+  revalidatePath("/estudiantes");
+}
+
+export async function deleteEstudianteAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  await deleteEstudiante(id);
   revalidatePath("/estudiantes");
 }
 

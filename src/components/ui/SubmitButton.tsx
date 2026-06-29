@@ -1,9 +1,12 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useFormPending } from "./ActionForm";
 
 export function SubmitButton({ children }: { children: React.ReactNode }) {
-  const { pending } = useFormStatus();
+  const { pending: statusPending } = useFormStatus();
+  const contextPending = useFormPending();
+  const pending = statusPending || contextPending;
 
   return (
     <button

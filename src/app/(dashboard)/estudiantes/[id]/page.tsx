@@ -3,7 +3,9 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, Select, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { DeleteEstudianteButton } from "./DeleteEstudianteButton";
 import {
   getEstudiante,
   listMatriculasDeEstudiante,
@@ -17,6 +19,7 @@ import {
   createMatriculaDirectaAction,
   retirarMatriculaAction,
   updateEstudianteAction,
+  deleteEstudianteAction,
 } from "./actions";
 
 export default async function EstudianteDetallePage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +42,7 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
         <section className="space-y-4 lg:col-span-2">
           <h2 className="text-sm font-semibold text-slate-900">Datos del estudiante</h2>
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <form action={updateEstudianteAction} className="grid gap-4 sm:grid-cols-2">
+            <ActionForm action={updateEstudianteAction} className="grid gap-4 sm:grid-cols-2">
               <input type="hidden" name="id" value={id} />
               <Field label="Nombres" htmlFor="nombres">
                 <TextInput id="nombres" name="nombres" defaultValue={estudiante.nombres} required />
@@ -69,7 +72,10 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
               <div className="sm:col-span-2">
                 <SubmitButton>Guardar cambios</SubmitButton>
               </div>
-            </form>
+            </ActionForm>
+          </div>
+          <div className="border-t border-slate-200 pt-4">
+            <DeleteEstudianteButton id={id} action={deleteEstudianteAction} />
           </div>
         </section>
 

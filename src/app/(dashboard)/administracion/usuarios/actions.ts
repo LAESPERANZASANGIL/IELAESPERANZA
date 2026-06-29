@@ -7,9 +7,11 @@ export async function createUsuarioAction(formData: FormData) {
   const input = usuarioSchema.parse({
     full_name: formData.get("full_name"),
     email: formData.get("email"),
+    password: formData.get("password"),
     role: formData.get("role"),
     documento_numero: formData.get("documento_numero") || undefined,
     phone: formData.get("phone") || undefined,
+    activo: formData.get("activo") === "on",
   });
   await createUsuario(input);
   revalidatePath("/administracion/usuarios");

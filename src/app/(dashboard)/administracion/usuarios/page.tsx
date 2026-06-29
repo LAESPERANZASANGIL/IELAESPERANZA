@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ROLE_LABELS, ROLES } from "@/types/roles";
 import { listProfiles } from "@/modules/core";
@@ -59,12 +60,15 @@ export default async function UsuariosPage() {
         </section>
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Nuevo usuario</h2>
-          <form action={createUsuarioAction} className="space-y-4">
+          <ActionForm action={createUsuarioAction} className="space-y-4">
             <Field label="Nombre completo" htmlFor="full_name">
               <TextInput id="full_name" name="full_name" required />
             </Field>
             <Field label="Correo" htmlFor="email">
               <TextInput id="email" name="email" type="email" required />
+            </Field>
+            <Field label="Contraseña temporal" htmlFor="password">
+              <TextInput id="password" name="password" type="password" minLength={6} required />
             </Field>
             <Field label="Rol" htmlFor="role">
               <Select id="role" name="role" required defaultValue="">
@@ -84,8 +88,12 @@ export default async function UsuariosPage() {
             <Field label="Teléfono" htmlFor="phone">
               <TextInput id="phone" name="phone" />
             </Field>
-            <SubmitButton>Invitar usuario</SubmitButton>
-          </form>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" name="activo" defaultChecked />
+              Usuario activo
+            </label>
+            <SubmitButton>Crear usuario</SubmitButton>
+          </ActionForm>
         </section>
       </main>
     </>

@@ -12,6 +12,13 @@ export async function createEstudianteAction(formData: FormData) {
     fecha_nacimiento: formData.get("fecha_nacimiento") || undefined,
     genero: formData.get("genero") || undefined,
   });
-  await createEstudiante(input);
+  try {
+    await createEstudiante(input);
+  } catch (err) {
+    if (err instanceof Error && (err.message.includes("duplicate") || err.message.includes("23505"))) {
+      throw new Error("Ya existe un estudiante con ese número de documento.");
+    }
+    throw err;
+  }
   revalidatePath("/estudiantes");
 }

@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listEstudiantes } from "@/modules/estudiantes";
 import { createEstudianteAction } from "./actions";
@@ -60,7 +61,7 @@ export default async function EstudiantesPage({
         </section>
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Nuevo estudiante</h2>
-          <form action={createEstudianteAction} className="space-y-4">
+          <ActionForm action={createEstudianteAction} className="space-y-4">
             <Field label="Nombres" htmlFor="nombres">
               <TextInput id="nombres" name="nombres" required />
             </Field>
@@ -80,7 +81,7 @@ export default async function EstudiantesPage({
               <TextInput id="genero" name="genero" />
             </Field>
             <SubmitButton>Crear estudiante</SubmitButton>
-          </form>
+          </ActionForm>
         </section>
       </main>
     </>

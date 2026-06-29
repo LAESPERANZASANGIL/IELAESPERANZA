@@ -11,14 +11,14 @@ export const gradoSchema = z.object({
 export const grupoSchema = z.object({
   grado_id: z.string().uuid("Selecciona un grado"),
   anio_lectivo_id: z.string().uuid("Selecciona un año lectivo"),
-  nombre: z.string().min(1, "El nombre es obligatorio"),
+  nombre: z.string().min(1, "El nombre del curso es obligatorio"),
   capacidad: z.coerce.number().int().optional(),
-  jornada: z.enum(["mañana", "tarde", "noche"]).optional(),
-  director_grupo_id: z.string().uuid().optional().or(z.literal("")),
+  jornada: z.enum(["mañana", "tarde", "noche"], { message: "Selecciona una jornada" }),
+  director_grupo_id: z.string().uuid("Selecciona un director de grupo"),
 });
 
 export const docenteUpdateSchema = z.object({
-  especialidad: z.string().optional(),
+  especialidad: z.string().min(1, "La especialidad es obligatoria"),
   tipo_contrato: z.string().optional(),
   fecha_ingreso: z.string().optional(),
 });
@@ -62,6 +62,35 @@ export async function createGrado(input: z.infer<typeof gradoSchema>) {
   if (error) throw new Error(error.message);
 }
 
+export async function getGrado(id: string): Promise<Grado | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("grados").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as Grado | null;
+}
+
+export async function updateGrado(id: string, input: z.infer<typeof gradoSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("grados").update(input).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function actualizarEstadoGrado(id: string, activo: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("grados").update({ activo }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteGrado(id: string) {
+  const supabase = await createClient();
+  const { count } = await supabase.from("grupos").select("id", { count: "exact", head: true }).eq("grado_id", id);
+  if (count && count > 0) {
+    throw new Error("No se puede eliminar: el grado tiene cursos asociados.");
+  }
+  const { error } = await supabase.from("grados").delete().eq("id", id);
+  if (error) throw new Error("No se puede eliminar: el grado tiene cursos o estudiantes asociados.");
+}
+
 export async function listGrupos(filters?: { grado_id?: string; anio_lectivo_id?: string }): Promise<Grupo[]> {
   const supabase = await createClient();
   let query = supabase.from("grupos").select("*").order("nombre");
@@ -74,11 +103,33 @@ export async function listGrupos(filters?: { grado_id?: string; anio_lectivo_id?
 
 export async function createGrupo(input: z.infer<typeof grupoSchema>) {
   const supabase = await createClient();
-  const { error } = await supabase.from("grupos").insert({
-    ...input,
-    director_grupo_id: input.director_grupo_id || null,
-  });
+  const { error } = await supabase.from("grupos").insert(input);
   if (error) throw new Error(error.message);
+}
+
+export async function getGrupo(id: string): Promise<Grupo | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("grupos").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as Grupo | null;
+}
+
+export async function updateGrupo(id: string, input: z.infer<typeof grupoSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("grupos").update(input).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function actualizarEstadoGrupo(id: string, activo: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("grupos").update({ activo }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteGrupo(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("grupos").delete().eq("id", id);
+  if (error) throw new Error("No se puede eliminar: el curso tiene estudiantes matriculados.");
 }
 
 export async function listDocentes(): Promise<(Docente & { profile: Profile })[]> {
@@ -112,6 +163,13 @@ export async function updateDocente(id: string, input: z.infer<typeof docenteUpd
       fecha_ingreso: input.fecha_ingreso || null,
     })
     .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteDocente(id: string) {
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(id);
   if (error) throw new Error(error.message);
 }
 

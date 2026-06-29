@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { ROLE_LABELS, ROLES } from "@/types/roles";
 import { getUsuario } from "@/modules/core";
 import { updateUsuarioAction } from "../actions";
@@ -16,7 +17,7 @@ export default async function UsuarioDetallePage({ params }: { params: Promise<{
       <Header title={`Editar usuario: ${usuario.full_name}`} />
       <main className="p-6">
         <section className="max-w-xl rounded-xl border border-slate-200 bg-white p-6">
-          <form action={updateUsuarioAction} className="space-y-4">
+          <ActionForm action={updateUsuarioAction} className="space-y-4">
             <input type="hidden" name="id" value={id} />
             <Field label="Nombre completo" htmlFor="full_name">
               <TextInput id="full_name" name="full_name" defaultValue={usuario.full_name} required />
@@ -40,7 +41,7 @@ export default async function UsuarioDetallePage({ params }: { params: Promise<{
               <TextInput id="phone" name="phone" defaultValue={usuario.phone ?? ""} />
             </Field>
             <SubmitButton>Guardar cambios</SubmitButton>
-          </form>
+          </ActionForm>
         </section>
       </main>
     </>

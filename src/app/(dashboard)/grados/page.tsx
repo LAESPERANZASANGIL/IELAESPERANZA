@@ -3,9 +3,10 @@ import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listGrados } from "@/modules/academico";
-import { createGradoAction } from "./actions";
+import { createGradoAction, actualizarEstadoGradoAction, deleteGradoAction } from "./actions";
 
 const NIVELES = ["preescolar", "primaria", "secundaria", "media"] as const;
 
@@ -25,6 +26,7 @@ export default async function GradosPage() {
                 <Th>Nombre</Th>
                 <Th>Nivel</Th>
                 <Th>Orden</Th>
+                <Th>Estado</Th>
                 <Th>{""}</Th>
               </Thead>
               <Tbody>
@@ -33,10 +35,26 @@ export default async function GradosPage() {
                     <Td>{grado.nombre}</Td>
                     <Td>{grado.nivel}</Td>
                     <Td>{grado.orden}</Td>
+                    <Td>{grado.activo ? "Activo" : "Inactivo"}</Td>
                     <Td>
-                      <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${grado.id}`}>
-                        Ver grupos
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${grado.id}`}>
+                          Editar / Ver cursos
+                        </Link>
+                        <ActionForm action={actualizarEstadoGradoAction} className="inline">
+                          <input type="hidden" name="id" value={grado.id} />
+                          <input type="hidden" name="activo" value={(!grado.activo).toString()} />
+                          <button className="text-sm font-medium text-brand-700 hover:underline" type="submit">
+                            {grado.activo ? "Desactivar" : "Activar"}
+                          </button>
+                        </ActionForm>
+                        <ActionForm action={deleteGradoAction} confirmMessage="¿Eliminar este grado?" className="inline">
+                          <input type="hidden" name="id" value={grado.id} />
+                          <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
+                            Eliminar
+                          </button>
+                        </ActionForm>
+                      </div>
                     </Td>
                   </tr>
                 ))}
@@ -46,7 +64,7 @@ export default async function GradosPage() {
         </section>
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Nuevo grado</h2>
-          <form action={createGradoAction} className="space-y-4">
+          <ActionForm action={createGradoAction} className="space-y-4">
             <Field label="Nombre" htmlFor="nombre">
               <TextInput id="nombre" name="nombre" required />
             </Field>
@@ -66,7 +84,7 @@ export default async function GradosPage() {
               <TextInput id="orden" name="orden" type="number" defaultValue={0} />
             </Field>
             <SubmitButton>Crear grado</SubmitButton>
-          </form>
+          </ActionForm>
         </section>
       </main>
     </>

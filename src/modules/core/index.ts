@@ -23,9 +23,11 @@ export const anioLectivoSchema = z
 export const usuarioSchema = z.object({
   full_name: z.string().min(2, "El nombre es obligatorio"),
   email: z.string().email("Correo inválido"),
+  password: z.string().min(6, "La contraseña temporal debe tener al menos 6 caracteres"),
   role: z.enum(["rector", "administrador", "secretaria", "docente", "padre_familia", "estudiante"]),
   documento_numero: z.string().optional(),
   phone: z.string().optional(),
+  activo: z.coerce.boolean().default(true),
 });
 
 export const usuarioUpdateSchema = z.object({
@@ -134,25 +136,41 @@ export async function createUsuario(input: z.infer<typeof usuarioSchema>) {
   const { createAdminClient } = await import("@/lib/supabase/admin");
   const admin = createAdminClient();
 
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(input.email);
-  if (inviteError) throw new Error(inviteError.message);
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: input.email,
+    password: input.password,
+    email_confirm: true,
+  });
+  if (createError) {
+    if (createError.message.toLowerCase().includes("already") || createError.code === "email_exists") {
+      throw new Error("Ya existe un usuario con ese correo.");
+    }
+    throw new Error(createError.message);
+  }
 
   const { error: profileError } = await admin.from("profiles").insert({
-    id: invited.user.id,
+    id: created.user.id,
     full_name: input.full_name,
     email: input.email,
     role: input.role,
     documento_numero: input.documento_numero || null,
     phone: input.phone || null,
+    activo: input.activo,
   });
-  if (profileError) throw new Error(profileError.message);
+  if (profileError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    if (profileError.message.includes("duplicate") || profileError.code === "23505") {
+      throw new Error("Ya existe un usuario con ese documento o correo.");
+    }
+    throw new Error(profileError.message);
+  }
 
   if (input.role === "docente") {
-    const { error: docenteError } = await admin.from("docentes").insert({ id: invited.user.id });
+    const { error: docenteError } = await admin.from("docentes").insert({ id: created.user.id });
     if (docenteError) throw new Error(docenteError.message);
   }
   if (input.role === "padre_familia") {
-    const { error: acudienteError } = await admin.from("acudientes").insert({ id: invited.user.id });
+    const { error: acudienteError } = await admin.from("acudientes").insert({ id: created.user.id });
     if (acudienteError) throw new Error(acudienteError.message);
   }
 }
