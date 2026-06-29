@@ -87,6 +87,12 @@ export const NAV_ITEMS: NavItem[] = [
     group: "Académico",
   },
   {
+    href: "/carga-academica",
+    label: "Carga académica",
+    roles: ["rector", "administrador", "secretaria", "docente"],
+    group: "Académico",
+  },
+  {
     href: "/notas",
     label: "Notas",
     roles: ["rector", "administrador", "secretaria", "docente", "padre_familia", "estudiante"],

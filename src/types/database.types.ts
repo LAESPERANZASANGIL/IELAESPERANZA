@@ -169,6 +169,7 @@ export interface MallaCurricular {
   asignatura_id: string;
   docente_id: string | null;
   intensidad_horaria: number | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   created_by: string | null;

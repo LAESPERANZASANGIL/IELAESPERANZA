@@ -81,6 +81,22 @@ export const mallaCurricularSchema = z.object({
   intensidad_horaria: z.coerce.number().int().optional(),
 });
 
+export const mallaCurricularCreateSchema = z.object({
+  grupo_id: z.string().uuid("Selecciona un curso"),
+  asignatura_id: z.string().uuid("Selecciona una asignatura"),
+  docente_id: z.string().uuid("Selecciona un docente").optional(),
+  intensidad_horaria: z.coerce.number().int().min(1).max(40).optional(),
+});
+
+export const mallaCurricularFiltrosSchema = z.object({
+  anio_lectivo_id: z.string().uuid().optional(),
+  grupo_id: z.string().uuid().optional(),
+  docente_id: z.string().uuid().optional(),
+  asignatura_id: z.string().uuid().optional(),
+  estado: z.enum(["activo", "inactivo"]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+
 export async function listGrados(): Promise<Grado[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("grados").select("*").order("orden");
@@ -406,7 +422,7 @@ export async function listMallaCurricular(grupoId: string): Promise<(MallaCurric
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("malla_curricular")
-    .select("*, asignatura:asignaturas(*), docente:docentes(*, profile:profiles(*))")
+    .select(`*, asignatura:asignaturas(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`)
     .eq("grupo_id", grupoId);
   if (error) throw new Error(error.message);
   return data as unknown as (MallaCurricular & { asignatura: Asignatura; docente: (Docente & { profile: Profile }) | null })[];
@@ -415,5 +431,162 @@ export async function listMallaCurricular(grupoId: string): Promise<(MallaCurric
 export async function asignarMallaCurricular(input: z.infer<typeof mallaCurricularSchema>) {
   const supabase = await createClient();
   const { error } = await supabase.from("malla_curricular").insert(input);
+  if (error) throw new Error(error.message);
+}
+
+const MALLA_PAGE_SIZE = 20;
+
+type MallaConRelaciones = MallaCurricular & {
+  grupo: Grupo & { grado: Grado };
+  asignatura: Asignatura;
+  docente: (Docente & { profile: Profile }) | null;
+};
+
+export async function listMallaCurricularPaginado(filtros: z.infer<typeof mallaCurricularFiltrosSchema>): Promise<{
+  malla: MallaConRelaciones[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const supabase = await createClient();
+  const page = filtros.page;
+  const from = (page - 1) * MALLA_PAGE_SIZE;
+  const to = from + MALLA_PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("malla_curricular")
+    .select(
+      `*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`,
+      { count: "exact" },
+    )
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (filtros.grupo_id) query = query.eq("grupo_id", filtros.grupo_id);
+  if (filtros.asignatura_id) query = query.eq("asignatura_id", filtros.asignatura_id);
+  if (filtros.docente_id) query = query.eq("docente_id", filtros.docente_id);
+  if (filtros.anio_lectivo_id) query = query.eq("grupo.anio_lectivo_id", filtros.anio_lectivo_id);
+  if (filtros.estado) query = query.eq("is_active", filtros.estado === "activo");
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+  return {
+    malla: data as unknown as MallaConRelaciones[],
+    total: count ?? 0,
+    page,
+    pageSize: MALLA_PAGE_SIZE,
+  };
+}
+
+export async function getMallaCurricular(id: string): Promise<MallaConRelaciones | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("malla_curricular")
+    .select(`*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as unknown as MallaConRelaciones | null;
+}
+
+export async function createMallaCurricular(input: z.infer<typeof mallaCurricularCreateSchema>) {
+  const supabase = await createClient();
+
+  // Check for duplicates first
+  const { count: dupCount } = await supabase
+    .from("malla_curricular")
+    .select("id", { count: "exact", head: true })
+    .eq("grupo_id", input.grupo_id)
+    .eq("asignatura_id", input.asignatura_id);
+  if (dupCount && dupCount > 0) {
+    throw new Error("Ya existe un docente asignado a esta asignatura en este curso.");
+  }
+
+  // Validate docente is active
+  if (input.docente_id) {
+    const { data: docenteProfile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", input.docente_id)
+      .maybeSingle();
+    if (docenteProfile && !docenteProfile.is_active) {
+      throw new Error("El docente seleccionado no está activo.");
+    }
+  }
+
+  // Validate grupo is active
+  const { data: grupo } = await supabase
+    .from("grupos")
+    .select("is_active")
+    .eq("id", input.grupo_id)
+    .maybeSingle();
+  if (grupo && !grupo.is_active) {
+    throw new Error("El curso seleccionado no está activo.");
+  }
+
+  // Validate asignatura is active
+  const { data: asig } = await supabase
+    .from("asignaturas")
+    .select("is_active")
+    .eq("id", input.asignatura_id)
+    .maybeSingle();
+  if (asig && !asig.is_active) {
+    throw new Error("La asignatura seleccionada no está activa.");
+  }
+
+  const { error } = await supabase.from("malla_curricular").insert({
+    grupo_id: input.grupo_id,
+    asignatura_id: input.asignatura_id,
+    docente_id: input.docente_id || null,
+    intensidad_horaria: input.intensidad_horaria || null,
+  });
+  if (error) {
+    if (error.code === "23505") throw new Error("Ya existe un docente asignado a esta asignatura en este curso.");
+    throw new Error(error.message);
+  }
+}
+
+export async function updateMallaCurricular(id: string, input: Pick<z.infer<typeof mallaCurricularCreateSchema>, "docente_id" | "intensidad_horaria">) {
+  const supabase = await createClient();
+
+  if (input.docente_id) {
+    const { data: docenteProfile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", input.docente_id)
+      .maybeSingle();
+    if (docenteProfile && !docenteProfile.is_active) {
+      throw new Error("El docente seleccionado no está activo.");
+    }
+  }
+
+  const { error } = await supabase
+    .from("malla_curricular")
+    .update({
+      docente_id: input.docente_id || null,
+      intensidad_horaria: input.intensidad_horaria || null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function actualizarEstadoMallaCurricular(id: string, isActive: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("malla_curricular").update({ is_active: isActive }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteMallaCurricular(id: string) {
+  const supabase = await createClient();
+
+  const { count: notasCount } = await supabase
+    .from("notas")
+    .select("id", { count: "exact", head: true })
+    .eq("malla_curricular_id", id);
+  if (notasCount && notasCount > 0) {
+    throw new Error("No se puede eliminar: tiene notas registradas. Desactívela en su lugar.");
+  }
+
+  const { error } = await supabase.from("malla_curricular").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
