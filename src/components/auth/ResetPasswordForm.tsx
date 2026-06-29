@@ -36,7 +36,7 @@ export function ResetPasswordForm() {
     }
 
     if (updateData.user) {
-      await supabase.from("profiles").update({ must_change_password: false }).eq("id", updateData.user.id);
+      await supabase.rpc("clear_must_change_password");
     }
 
     setLoading(false);

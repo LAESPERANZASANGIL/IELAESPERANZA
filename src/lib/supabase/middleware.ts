@@ -42,13 +42,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && !isPublicPath) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("must_change_password")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: mustChange } = await supabase.rpc("get_must_change_password", { user_id: user.id });
 
-    if (profile?.must_change_password && request.nextUrl.pathname !== "/reset-password") {
+    if (mustChange && request.nextUrl.pathname !== "/reset-password") {
       const url = request.nextUrl.clone();
       url.pathname = "/reset-password";
       return NextResponse.redirect(url);
