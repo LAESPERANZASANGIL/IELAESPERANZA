@@ -164,9 +164,13 @@ export async function deleteGrupo(id: string) {
   if (error) throw new Error("No se puede eliminar: el curso tiene estudiantes matriculados.");
 }
 
+const PROFILE_COLS = "id,full_name,email,phone,documento_tipo,documento_numero,role,is_active,sede_id,avatar_url,created_at,updated_at,created_by,updated_by";
+
 export async function listDocentes(soloActivos = false): Promise<(Docente & { profile: Profile })[]> {
   const supabase = await createClient();
-  const joinedTable = soloActivos ? "profile:profiles!inner(*)" : "profile:profiles(*)";
+  const joinedTable = soloActivos
+    ? `profile:profiles!inner(${PROFILE_COLS})`
+    : `profile:profiles(${PROFILE_COLS})`;
   let query = supabase.from("docentes").select(`*, ${joinedTable}`).order("id");
   if (soloActivos) query = query.eq("profile.is_active", true);
   const { data, error } = await query;
@@ -189,7 +193,7 @@ export async function listDocentesPaginado(filtros: z.infer<typeof docenteFiltro
 
   let query = supabase
     .from("docentes")
-    .select("*, profile:profiles!inner(*)", { count: "exact" })
+    .select(`*, profile:profiles!inner(${PROFILE_COLS})`, { count: "exact" })
     .order("id")
     .range(from, to);
 
@@ -213,7 +217,7 @@ export async function getDocente(id: string): Promise<(Docente & { profile: Prof
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("docentes")
-    .select("*, profile:profiles(*)")
+    .select(`*, profile:profiles(${PROFILE_COLS})`)
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
