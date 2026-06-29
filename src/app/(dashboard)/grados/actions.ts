@@ -20,6 +20,8 @@ export async function createGrupoAction(formData: FormData) {
     anio_lectivo_id: formData.get("anio_lectivo_id"),
     nombre: formData.get("nombre"),
     capacidad: formData.get("capacidad") || undefined,
+    jornada: formData.get("jornada") || undefined,
+    director_grupo_id: formData.get("director_grupo_id") || undefined,
   });
   await createGrupo(input);
   revalidatePath(`/grados/${gradoId}`);

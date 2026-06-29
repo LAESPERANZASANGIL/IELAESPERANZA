@@ -1,8 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { vincularAcudienteSchema, vincularAcudiente } from "@/modules/estudiantes";
+import { vincularAcudienteSchema, vincularAcudiente, estudianteUpdateSchema, updateEstudiante } from "@/modules/estudiantes";
 import { matriculaSchema, createMatriculaDirecta, retirarMatricula } from "@/modules/matricula";
+
+export async function updateEstudianteAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  const input = estudianteUpdateSchema.parse({
+    nombres: formData.get("nombres"),
+    apellidos: formData.get("apellidos"),
+    documento_tipo: formData.get("documento_tipo") || undefined,
+    documento_numero: formData.get("documento_numero") || undefined,
+    fecha_nacimiento: formData.get("fecha_nacimiento") || undefined,
+    genero: formData.get("genero") || undefined,
+    estado_general: formData.get("estado_general"),
+  });
+  await updateEstudiante(id, input);
+  revalidatePath(`/estudiantes/${id}`);
+  revalidatePath("/estudiantes");
+}
 
 export async function vincularAcudienteAction(formData: FormData) {
   const estudianteId = String(formData.get("estudiante_id"));

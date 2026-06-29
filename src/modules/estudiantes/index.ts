@@ -11,6 +11,16 @@ export const estudianteSchema = z.object({
   genero: z.string().optional(),
 });
 
+export const estudianteUpdateSchema = z.object({
+  nombres: z.string().min(1, "Los nombres son obligatorios"),
+  apellidos: z.string().min(1, "Los apellidos son obligatorios"),
+  documento_tipo: z.string().optional(),
+  documento_numero: z.string().optional(),
+  fecha_nacimiento: z.string().optional(),
+  genero: z.string().optional(),
+  estado_general: z.enum(["activo", "inactivo", "graduado"]),
+});
+
 export const acudienteSchema = z.object({
   full_name: z.string().min(1, "El nombre es obligatorio"),
   email: z.string().email("Correo inválido"),
@@ -47,6 +57,23 @@ export async function createEstudiante(input: z.infer<typeof estudianteSchema>):
   const { data, error } = await supabase.from("estudiantes").insert(input).select("id").single();
   if (error) throw new Error(error.message);
   return data.id as string;
+}
+
+export async function updateEstudiante(id: string, input: z.infer<typeof estudianteUpdateSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("estudiantes")
+    .update({
+      nombres: input.nombres,
+      apellidos: input.apellidos,
+      documento_tipo: input.documento_tipo || null,
+      documento_numero: input.documento_numero || null,
+      fecha_nacimiento: input.fecha_nacimiento || null,
+      genero: input.genero || null,
+      estado_general: input.estado_general,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function listMatriculasDeEstudiante(estudianteId: string): Promise<(Matricula & { grupo: Grupo })[]> {

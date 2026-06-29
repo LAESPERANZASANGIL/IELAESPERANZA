@@ -24,6 +24,7 @@ export type EstadoCertificado =
   | "rechazado";
 export type TipoCertificado = "estudio" | "conducta" | "notas" | "paz_y_salvo";
 export type NivelEducativo = "preescolar" | "primaria" | "secundaria" | "media";
+export type Jornada = "mañana" | "tarde" | "noche";
 
 export interface Sede {
   id: string;
@@ -75,6 +76,7 @@ export interface Grupo {
   nombre: string;
   director_grupo_id: string | null;
   capacidad: number | null;
+  jornada: Jornada | null;
   created_at: string;
 }
 
@@ -84,6 +86,22 @@ export interface Docente {
   tipo_contrato: string | null;
   fecha_ingreso: string | null;
   created_at: string;
+}
+
+export interface InstitucionConfig {
+  id: string;
+  nombre: string;
+  nit: string | null;
+  codigo_dane: string | null;
+  direccion: string | null;
+  telefono: string | null;
+  correo: string | null;
+  rector_id: string | null;
+  escudo_url: string | null;
+  logo_url: string | null;
+  anio_lectivo_activo_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Asignatura {

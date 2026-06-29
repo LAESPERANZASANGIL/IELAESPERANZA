@@ -13,6 +13,14 @@ export const grupoSchema = z.object({
   anio_lectivo_id: z.string().uuid("Selecciona un año lectivo"),
   nombre: z.string().min(1, "El nombre es obligatorio"),
   capacidad: z.coerce.number().int().optional(),
+  jornada: z.enum(["mañana", "tarde", "noche"]).optional(),
+  director_grupo_id: z.string().uuid().optional().or(z.literal("")),
+});
+
+export const docenteUpdateSchema = z.object({
+  especialidad: z.string().optional(),
+  tipo_contrato: z.string().optional(),
+  fecha_ingreso: z.string().optional(),
 });
 
 export const asignaturaSchema = z.object({
@@ -66,7 +74,10 @@ export async function listGrupos(filters?: { grado_id?: string; anio_lectivo_id?
 
 export async function createGrupo(input: z.infer<typeof grupoSchema>) {
   const supabase = await createClient();
-  const { error } = await supabase.from("grupos").insert(input);
+  const { error } = await supabase.from("grupos").insert({
+    ...input,
+    director_grupo_id: input.director_grupo_id || null,
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -78,6 +89,30 @@ export async function listDocentes(): Promise<(Docente & { profile: Profile })[]
     .order("id");
   if (error) throw new Error(error.message);
   return data as unknown as (Docente & { profile: Profile })[];
+}
+
+export async function getDocente(id: string): Promise<(Docente & { profile: Profile }) | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("docentes")
+    .select("*, profile:profiles(*)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as unknown as (Docente & { profile: Profile }) | null;
+}
+
+export async function updateDocente(id: string, input: z.infer<typeof docenteUpdateSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("docentes")
+    .update({
+      especialidad: input.especialidad || null,
+      tipo_contrato: input.tipo_contrato || null,
+      fecha_ingreso: input.fecha_ingreso || null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function listAsignaturas(): Promise<Asignatura[]> {

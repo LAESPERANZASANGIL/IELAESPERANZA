@@ -2,7 +2,7 @@
 
 > Proyecto renombrado a **Campus La Esperanza** (ver `docs/adr/0002-rebranding-campus-la-esperanza.md`). Las referencias a "IE La Esperanza" en este documento son al nombre histórico de la institución, no al producto.
 >
-> Estado: **aprobado**. El núcleo de Fase 1 ya está implementado; los módulos restantes se construyen de forma incremental.
+> Estado: **aprobado**. El núcleo de Fase 1 ya está implementado, incluyendo su extensión de "Núcleo Institucional" (configuración institucional, jornada de grupos, edición de docentes/estudiantes); los módulos restantes se construyen de forma incremental.
 
 ## 0. Visión y restricciones de diseño
 
@@ -786,6 +786,7 @@ Esto implica una migración de esquema (no solo una adición) cuando se apruebe 
 ### Fase 1 — Núcleo académico y matrícula
 - Módulos: Administración del sistema (usuarios/roles/sedes/años lectivos), Matrícula, Estudiantes, Acudientes, Académico (grados/grupos/docentes/asignaturas/periodos).
 - Sin este núcleo, ningún otro módulo tiene datos reales sobre los que operar.
+- **Extensión "Núcleo Institucional" (entregada):** configuración institucional de fila única (`institucion_config`: nombre, NIT, código DANE, dirección, teléfono, correo, rector, escudo, logo, año lectivo activo) en `administracion/configuracion`; columna `jornada` (mañana/tarde/noche) y director de grupo en `grupos`; edición de docentes (especialidad, tipo de contrato, fecha de ingreso) y de estudiantes (datos personales y estado general) desde su ficha. Ver `supabase/migrations/0003_nucleo_institucional.sql`.
 
 ### Fase 2 — Gestión académica diaria
 - Módulos: Calificaciones, Asistencia, Disciplina/Observador.

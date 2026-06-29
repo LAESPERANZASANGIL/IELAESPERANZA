@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,6 +22,8 @@ export default async function DocentesPage() {
               <Th>Nombre</Th>
               <Th>Correo</Th>
               <Th>Teléfono</Th>
+              <Th>Especialidad</Th>
+              <Th>{""}</Th>
             </Thead>
             <Tbody>
               {docentes.map((docente) => (
@@ -28,6 +31,12 @@ export default async function DocentesPage() {
                   <Td>{docente.profile.full_name}</Td>
                   <Td>{docente.profile.email}</Td>
                   <Td>{docente.profile.phone ?? "—"}</Td>
+                  <Td>{docente.especialidad ?? "—"}</Td>
+                  <Td>
+                    <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/docentes/${docente.id}`}>
+                      Editar
+                    </Link>
+                  </Td>
                 </tr>
               ))}
             </Tbody>

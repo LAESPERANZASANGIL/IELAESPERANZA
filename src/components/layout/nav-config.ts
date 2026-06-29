@@ -15,6 +15,12 @@ export const NAV_ITEMS: NavItem[] = [
     group: "General",
   },
   {
+    href: "/administracion/configuracion",
+    label: "Configuración institucional",
+    roles: ["rector", "administrador"],
+    group: "Administración",
+  },
+  {
     href: "/administracion/sedes",
     label: "Sedes",
     roles: ["rector", "administrador"],

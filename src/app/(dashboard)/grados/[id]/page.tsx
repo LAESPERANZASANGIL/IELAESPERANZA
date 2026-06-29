@@ -4,13 +4,17 @@ import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { listGrupos } from "@/modules/academico";
+import { listGrupos, listDocentes } from "@/modules/academico";
 import { listAniosLectivos } from "@/modules/core";
 import { createGrupoAction } from "../actions";
 
 export default async function GrupoDeGradoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [grupos, anios] = await Promise.all([listGrupos({ grado_id: id }), listAniosLectivos()]);
+  const [grupos, anios, docentes] = await Promise.all([
+    listGrupos({ grado_id: id }),
+    listAniosLectivos(),
+    listDocentes(),
+  ]);
 
   return (
     <>
@@ -23,6 +27,7 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
             <Table>
               <Thead>
                 <Th>Nombre</Th>
+                <Th>Jornada</Th>
                 <Th>Capacidad</Th>
                 <Th>{""}</Th>
               </Thead>
@@ -30,6 +35,7 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
                 {grupos.map((grupo) => (
                   <tr key={grupo.id}>
                     <Td>{grupo.nombre}</Td>
+                    <Td>{grupo.jornada ?? "—"}</Td>
                     <Td>{grupo.capacidad ?? "—"}</Td>
                     <Td>
                       <Link className="text-sm font-medium text-brand-700 hover:underline" href={`/grados/${id}/grupos/${grupo.id}`}>
@@ -63,6 +69,24 @@ export default async function GrupoDeGradoPage({ params }: { params: Promise<{ i
             </Field>
             <Field label="Capacidad" htmlFor="capacidad">
               <TextInput id="capacidad" name="capacidad" type="number" />
+            </Field>
+            <Field label="Jornada" htmlFor="jornada">
+              <Select id="jornada" name="jornada" defaultValue="">
+                <option value="">Sin definir</option>
+                <option value="mañana">Mañana</option>
+                <option value="tarde">Tarde</option>
+                <option value="noche">Noche</option>
+              </Select>
+            </Field>
+            <Field label="Director de grupo" htmlFor="director_grupo_id">
+              <Select id="director_grupo_id" name="director_grupo_id" defaultValue="">
+                <option value="">Sin asignar</option>
+                {docentes.map((docente) => (
+                  <option key={docente.id} value={docente.id}>
+                    {docente.profile.full_name}
+                  </option>
+                ))}
+              </Select>
             </Field>
             <SubmitButton>Crear grupo</SubmitButton>
           </form>

@@ -12,7 +12,12 @@ import {
 } from "@/modules/estudiantes";
 import { listAniosLectivos } from "@/modules/core";
 import { listGrupos } from "@/modules/academico";
-import { vincularAcudienteAction, createMatriculaDirectaAction, retirarMatriculaAction } from "./actions";
+import {
+  vincularAcudienteAction,
+  createMatriculaDirectaAction,
+  retirarMatriculaAction,
+  updateEstudianteAction,
+} from "./actions";
 
 export default async function EstudianteDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,6 +36,43 @@ export default async function EstudianteDetallePage({ params }: { params: Promis
     <>
       <Header title={`${estudiante.nombres} ${estudiante.apellidos}`} />
       <main className="grid gap-6 p-6 lg:grid-cols-2">
+        <section className="space-y-4 lg:col-span-2">
+          <h2 className="text-sm font-semibold text-slate-900">Datos del estudiante</h2>
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <form action={updateEstudianteAction} className="grid gap-4 sm:grid-cols-2">
+              <input type="hidden" name="id" value={id} />
+              <Field label="Nombres" htmlFor="nombres">
+                <TextInput id="nombres" name="nombres" defaultValue={estudiante.nombres} required />
+              </Field>
+              <Field label="Apellidos" htmlFor="apellidos">
+                <TextInput id="apellidos" name="apellidos" defaultValue={estudiante.apellidos} required />
+              </Field>
+              <Field label="Tipo de documento" htmlFor="documento_tipo">
+                <TextInput id="documento_tipo" name="documento_tipo" defaultValue={estudiante.documento_tipo ?? ""} />
+              </Field>
+              <Field label="Número de documento" htmlFor="documento_numero">
+                <TextInput id="documento_numero" name="documento_numero" defaultValue={estudiante.documento_numero ?? ""} />
+              </Field>
+              <Field label="Fecha de nacimiento" htmlFor="fecha_nacimiento">
+                <TextInput id="fecha_nacimiento" name="fecha_nacimiento" type="date" defaultValue={estudiante.fecha_nacimiento ?? ""} />
+              </Field>
+              <Field label="Género" htmlFor="genero">
+                <TextInput id="genero" name="genero" defaultValue={estudiante.genero ?? ""} />
+              </Field>
+              <Field label="Estado" htmlFor="estado_general">
+                <Select id="estado_general" name="estado_general" defaultValue={estudiante.estado_general}>
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="graduado">Graduado</option>
+                </Select>
+              </Field>
+              <div className="sm:col-span-2">
+                <SubmitButton>Guardar cambios</SubmitButton>
+              </div>
+            </form>
+          </div>
+        </section>
+
         <section className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-900">Matrículas</h2>
           {matriculas.length === 0 ? (

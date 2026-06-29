@@ -24,7 +24,7 @@ src/
     auth/callback/         Callback de Supabase Auth
     (dashboard)/           Rutas protegidas con shell de navegación según rol
       dashboard/           Panel principal por rol
-      administracion/      Sedes, años lectivos, usuarios
+      administracion/      Configuración institucional, sedes, años lectivos, usuarios
       matricula/           Procesos de matrícula y solicitudes de admisión
       estudiantes/         Módulo de estudiantes
       acudientes/          Módulo de acudientes
@@ -75,4 +75,4 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ## Próximos pasos
 
-El núcleo de Fase 1 (administración, matrícula, estudiantes/acudientes y académico) ya tiene pantallas funcionales. Los módulos restantes (notas, asistencia, mensajería, boletines en PDF y certificados) están planteados con pantallas iniciales; su funcionalidad CRUD y los reportes en PDF se implementarán de forma incremental, módulo por módulo, según `MASTER_PLAN.md`.
+El núcleo de Fase 1 (administración, matrícula, estudiantes/acudientes y académico) ya tiene pantallas funcionales. La Fase 2 (núcleo institucional) agregó configuración institucional (`administracion/configuracion`), jornada y director de grupo en `grupos`, y edición de estudiantes/docentes — ver `supabase/migrations/0003_nucleo_institucional.sql`. Los módulos restantes (notas, asistencia, mensajería, boletines en PDF y certificados) están planteados con pantallas iniciales; su funcionalidad CRUD y los reportes en PDF se implementarán de forma incremental, módulo por módulo, según `MASTER_PLAN.md`.
