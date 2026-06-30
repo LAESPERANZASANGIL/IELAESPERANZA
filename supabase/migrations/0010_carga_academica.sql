@@ -12,9 +12,15 @@ alter table malla_curricular add column if not exists is_active boolean not null
 -- sus propias asignaciones.
 -- ----------------------------------------------------------------------------
 
--- Eliminar las políticas anteriores si existen
+-- Eliminar todas las políticas existentes de malla_curricular (idempotente)
 drop policy if exists "malla_curricular_select_all" on malla_curricular;
 drop policy if exists "malla_curricular_write_staff" on malla_curricular;
+drop policy if exists "malla_curricular_select_docente" on malla_curricular;
+drop policy if exists "malla_curricular_select_staff" on malla_curricular;
+drop policy if exists "malla_curricular_select_authenticated" on malla_curricular;
+drop policy if exists "malla_curricular_insert_staff" on malla_curricular;
+drop policy if exists "malla_curricular_update_staff" on malla_curricular;
+drop policy if exists "malla_curricular_delete_staff" on malla_curricular;
 
 -- Staff: acceso completo
 create policy "malla_curricular_write_staff" on malla_curricular
@@ -27,3 +33,5 @@ create policy "malla_curricular_select_docente" on malla_curricular
     or docente_id = auth.uid()
     or auth_role() not in ('docente', 'rector', 'administrador', 'secretaria', 'padre_familia', 'estudiante')
   );
+
+notify pgrst, 'reload schema';
