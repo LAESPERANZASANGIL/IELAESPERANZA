@@ -185,8 +185,8 @@ const PROFILE_COLS = "id,full_name,email,phone,documento_tipo,documento_numero,r
 export async function listDocentes(soloActivos = false): Promise<(Docente & { profile: Profile })[]> {
   const supabase = await createClient();
   const joinedTable = soloActivos
-    ? `profile:profiles!inner(${PROFILE_COLS})`
-    : `profile:profiles(${PROFILE_COLS})`;
+    ? `profile:profiles!docentes_id_fkey(${PROFILE_COLS})`
+    : `profile:profiles!docentes_id_fkey(${PROFILE_COLS})`;
   let query = supabase.from("docentes").select(`*, ${joinedTable}`).order("id");
   if (soloActivos) query = query.eq("profile.is_active", true);
   const { data, error } = await query;
@@ -209,7 +209,7 @@ export async function listDocentesPaginado(filtros: z.infer<typeof docenteFiltro
 
   let query = supabase
     .from("docentes")
-    .select(`*, profile:profiles!inner(${PROFILE_COLS})`, { count: "exact" })
+    .select(`*, profile:profiles!docentes_id_fkey(${PROFILE_COLS})`, { count: "exact" })
     .order("id")
     .range(from, to);
 
@@ -233,7 +233,7 @@ export async function getDocente(id: string): Promise<(Docente & { profile: Prof
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("docentes")
-    .select(`*, profile:profiles(${PROFILE_COLS})`)
+    .select(`*, profile:profiles!docentes_id_fkey(${PROFILE_COLS})`)
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -422,7 +422,7 @@ export async function listMallaCurricular(grupoId: string): Promise<(MallaCurric
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("malla_curricular")
-    .select(`*, asignatura:asignaturas(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`)
+    .select(`*, asignatura:asignaturas(*), docente:docentes(*, profile:profiles!docentes_id_fkey(${PROFILE_COLS}))`)
     .eq("grupo_id", grupoId);
   if (error) throw new Error(error.message);
   return data as unknown as (MallaCurricular & { asignatura: Asignatura; docente: (Docente & { profile: Profile }) | null })[];
@@ -456,7 +456,7 @@ export async function listMallaCurricularPaginado(filtros: z.infer<typeof mallaC
   let query = supabase
     .from("malla_curricular")
     .select(
-      `*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`,
+      `*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles!docentes_id_fkey(${PROFILE_COLS}))`,
       { count: "exact" },
     )
     .order("created_at", { ascending: false })
@@ -482,7 +482,7 @@ export async function getMallaCurricular(id: string): Promise<MallaConRelaciones
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("malla_curricular")
-    .select(`*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles(${PROFILE_COLS}))`)
+    .select(`*, grupo:grupos!inner(*, grado:grados!inner(*)), asignatura:asignaturas!inner(*), docente:docentes(*, profile:profiles!docentes_id_fkey(${PROFILE_COLS}))`)
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
