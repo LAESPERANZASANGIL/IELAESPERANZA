@@ -49,6 +49,36 @@ export async function createProcesoMatricula(input: z.infer<typeof procesoMatric
   if (error) throw new Error(error.message);
 }
 
+export async function getProcesoMatricula(id: string): Promise<(ProcesoMatricula & { anio_lectivo: AnioLectivo }) | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("procesos_matricula")
+    .select("*, anio_lectivo:anios_lectivos(*)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as unknown as (ProcesoMatricula & { anio_lectivo: AnioLectivo }) | null;
+}
+
+export async function updateProcesoMatricula(id: string, input: z.infer<typeof procesoMatriculaSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("procesos_matricula").update(input).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteProcesoMatricula(id: string) {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("solicitudes_admision")
+    .select("id", { count: "exact", head: true })
+    .eq("proceso_matricula_id", id);
+  if (count && count > 0) {
+    throw new Error("No se puede eliminar: el proceso tiene solicitudes de admisión asociadas.");
+  }
+  const { error } = await supabase.from("procesos_matricula").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function listSolicitudesAdmision(): Promise<(SolicitudAdmision & { grado_solicitado: Grado | null })[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

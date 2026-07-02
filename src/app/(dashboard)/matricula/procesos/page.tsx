@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Table, Thead, Th, Tbody, Td } from "@/components/ui/Table";
 import { Field, TextInput, Select } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ActionForm } from "@/components/ui/ActionForm";
 import { listProcesosMatricula } from "@/modules/matricula";
 import { listAniosLectivos } from "@/modules/core";
-import { createProcesoMatriculaAction } from "./actions";
+import { createProcesoMatriculaAction, deleteProcesoMatriculaAction } from "./actions";
 
 export default async function ProcesosMatriculaPage() {
   const [procesos, anios] = await Promise.all([listProcesosMatricula(), listAniosLectivos()]);
@@ -25,6 +27,7 @@ export default async function ProcesosMatriculaPage() {
                 <Th>Apertura</Th>
                 <Th>Cierre</Th>
                 <Th>Estado</Th>
+                <Th>Acciones</Th>
               </Thead>
               <Tbody>
                 {procesos.map((proceso) => (
@@ -34,6 +37,26 @@ export default async function ProcesosMatriculaPage() {
                     <Td>{proceso.fecha_apertura}</Td>
                     <Td>{proceso.fecha_cierre}</Td>
                     <Td>{proceso.estado}</Td>
+                    <Td>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/matricula/procesos/${proceso.id}`}
+                          className="text-sm font-medium text-brand-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
+                        <ActionForm action={deleteProcesoMatriculaAction}>
+                          <input type="hidden" name="id" value={proceso.id} />
+                          <button
+                            type="submit"
+                            className="text-sm font-medium text-red-600 hover:underline"
+                            onClick={(e) => { if (!confirm("¿Eliminar este proceso?")) e.preventDefault(); }}
+                          >
+                            Eliminar
+                          </button>
+                        </ActionForm>
+                      </div>
+                    </Td>
                   </tr>
                 ))}
               </Tbody>
@@ -45,13 +68,9 @@ export default async function ProcesosMatriculaPage() {
           <form action={createProcesoMatriculaAction} className="space-y-4">
             <Field label="Año lectivo" htmlFor="anio_lectivo_id">
               <Select id="anio_lectivo_id" name="anio_lectivo_id" required defaultValue="">
-                <option value="" disabled>
-                  Selecciona un año lectivo
-                </option>
+                <option value="" disabled>Selecciona un año lectivo</option>
                 {anios.map((anio) => (
-                  <option key={anio.id} value={anio.id}>
-                    {anio.anio}
-                  </option>
+                  <option key={anio.id} value={anio.id}>{anio.anio}</option>
                 ))}
               </Select>
             </Field>
