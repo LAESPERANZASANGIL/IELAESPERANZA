@@ -61,6 +61,20 @@ export async function listSolicitudesAdmision(): Promise<(SolicitudAdmision & { 
 
 export async function createSolicitudAdmision(input: z.infer<typeof solicitudAdmisionSchema>) {
   const supabase = await createClient();
+
+  // Verificar duplicado por documento dentro del mismo proceso
+  if (input.aspirante_documento && input.proceso_matricula_id) {
+    const { count } = await supabase
+      .from("solicitudes_admision")
+      .select("id", { count: "exact", head: true })
+      .eq("proceso_matricula_id", input.proceso_matricula_id)
+      .eq("aspirante_documento", input.aspirante_documento)
+      .not("estado", "eq", "rechazado");
+    if (count && count > 0) {
+      throw new Error("Ya existe una solicitud activa para este aspirante en este proceso de matrícula.");
+    }
+  }
+
   const { error } = await supabase.from("solicitudes_admision").insert(input);
   if (error) throw new Error(error.message);
 }
