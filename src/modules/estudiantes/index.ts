@@ -96,7 +96,7 @@ export async function listAcudientesDeEstudiante(estudianteId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("estudiante_acudientes")
-    .select("*, acudiente:acudientes(*, profile:profiles(*))")
+    .select("*, acudiente:acudientes(*, profile:profiles!acudientes_id_fkey(*))")
     .eq("estudiante_id", estudianteId);
   if (error) throw new Error(error.message);
   return data as unknown as { parentesco: string | null; es_acudiente_principal: boolean; acudiente: Acudiente & { profile: Profile } }[];
@@ -104,7 +104,7 @@ export async function listAcudientesDeEstudiante(estudianteId: string) {
 
 export async function listAcudientes(): Promise<(Acudiente & { profile: Profile })[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("acudientes").select("*, profile:profiles(*)");
+  const { data, error } = await supabase.from("acudientes").select("*, profile:profiles!acudientes_id_fkey(*)");
   if (error) throw new Error(error.message);
   return data as unknown as (Acudiente & { profile: Profile })[];
 }
