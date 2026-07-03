@@ -133,6 +133,8 @@ export interface InstitucionConfig {
   anio_lectivo_activo_id: string | null;
   mensaje_bienvenida: string | null;
   slogan: string | null;
+  info_colegio: string | null;
+  correos_adicionales: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;

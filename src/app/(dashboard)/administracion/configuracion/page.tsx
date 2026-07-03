@@ -68,10 +68,11 @@ export default async function ConfiguracionInstitucionalPage() {
                 <TextInput id="logo_url" name="logo_url" type="url" defaultValue={config?.logo_url ?? ""} />
               </Field>
             </div>
-            <div className="border-t border-slate-200 pt-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Página de inicio (landing)</p>
-              <Field label="Slogan / lema institucional" htmlFor="slogan">
-                <TextInput id="slogan" name="slogan" placeholder="Ej. Formando líderes del mañana" defaultValue={config?.slogan ?? ""} />
+            <div className="border-t border-slate-200 pt-4 space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Página de inicio pública (landing)</p>
+              <p className="text-xs text-slate-500">Estos textos aparecen en la primera página que ve cualquier visitante antes de ingresar.</p>
+              <Field label="Lema / slogan institucional" htmlFor="slogan">
+                <TextInput id="slogan" name="slogan" placeholder="Ej. Aprendiendo a educarse, ser y obrar" defaultValue={config?.slogan ?? ""} />
               </Field>
               <Field label="Mensaje de bienvenida" htmlFor="mensaje_bienvenida">
                 <textarea
@@ -79,9 +80,22 @@ export default async function ConfiguracionInstitucionalPage() {
                   name="mensaje_bienvenida"
                   rows={3}
                   defaultValue={config?.mensaje_bienvenida ?? ""}
-                  placeholder="Texto que aparece en la página de inicio del sistema..."
+                  placeholder="Mensaje principal visible en la landing..."
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                 />
+              </Field>
+              <Field label="Información del colegio" htmlFor="info_colegio">
+                <textarea
+                  id="info_colegio"
+                  name="info_colegio"
+                  rows={4}
+                  defaultValue={config?.info_colegio ?? ""}
+                  placeholder="Historia, misión, visión, niveles que ofrece..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                />
+              </Field>
+              <Field label="Correos adicionales" htmlFor="correos_adicionales">
+                <TextInput id="correos_adicionales" name="correos_adicionales" placeholder="secretaria@col.edu.co, rector@col.edu.co (separados por coma)" defaultValue={config?.correos_adicionales ?? ""} />
               </Field>
             </div>
             <div className="flex items-center gap-4">

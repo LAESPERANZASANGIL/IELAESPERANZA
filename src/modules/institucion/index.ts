@@ -17,6 +17,8 @@ export const institucionConfigSchema = z.object({
   anio_lectivo_activo_id: z.string().uuid().optional().or(z.literal("")),
   mensaje_bienvenida: z.string().optional(),
   slogan: z.string().optional(),
+  info_colegio: z.string().optional(),
+  correos_adicionales: z.string().optional(),
 });
 
 export async function getInstitucionConfig(): Promise<InstitucionConfig | null> {
@@ -46,6 +48,8 @@ export async function upsertInstitucionConfig(input: z.infer<typeof institucionC
     anio_lectivo_activo_id: input.anio_lectivo_activo_id || null,
     mensaje_bienvenida: input.mensaje_bienvenida || null,
     slogan: input.slogan || null,
+    info_colegio: input.info_colegio || null,
+    correos_adicionales: input.correos_adicionales || null,
   });
   if (error) throw new Error(error.message);
 }

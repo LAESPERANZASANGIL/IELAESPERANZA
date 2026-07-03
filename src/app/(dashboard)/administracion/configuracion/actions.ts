@@ -17,6 +17,8 @@ export async function updateInstitucionConfigAction(formData: FormData) {
     anio_lectivo_activo_id: formData.get("anio_lectivo_activo_id") || undefined,
     mensaje_bienvenida: formData.get("mensaje_bienvenida") || undefined,
     slogan: formData.get("slogan") || undefined,
+    info_colegio: formData.get("info_colegio") || undefined,
+    correos_adicionales: formData.get("correos_adicionales") || undefined,
   });
   await upsertInstitucionConfig(input);
   revalidatePath("/administracion/configuracion");
