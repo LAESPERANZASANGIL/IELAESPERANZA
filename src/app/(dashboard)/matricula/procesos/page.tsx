@@ -45,13 +45,9 @@ export default async function ProcesosMatriculaPage() {
                         >
                           Editar
                         </Link>
-                        <ActionForm action={deleteProcesoMatriculaAction}>
+                        <ActionForm action={deleteProcesoMatriculaAction} confirmMessage="¿Eliminar este proceso?">
                           <input type="hidden" name="id" value={proceso.id} />
-                          <button
-                            type="submit"
-                            className="text-sm font-medium text-red-600 hover:underline"
-                            onClick={(e) => { if (!confirm("¿Eliminar este proceso?")) e.preventDefault(); }}
-                          >
+                          <button type="submit" className="text-sm font-medium text-red-600 hover:underline">
                             Eliminar
                           </button>
                         </ActionForm>
