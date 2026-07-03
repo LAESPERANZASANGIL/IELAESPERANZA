@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { guardarNotas, actividadEvaluacionSchema, crearActividad, eliminarActividad } from "@/modules/calificaciones";
+import { guardarNotas, actividadEvaluacionSchema, actividadUpdateSchema, crearActividad, editarActividad, eliminarActividad } from "@/modules/calificaciones";
 import { requireProfile } from "@/lib/auth/session";
 
 export async function crearActividadAction(formData: FormData) {
@@ -18,6 +18,22 @@ export async function crearActividadAction(formData: FormData) {
     orden: formData.get("orden") || 0,
   });
   await crearActividad(input);
+  revalidatePath("/notas");
+}
+
+export async function editarActividadAction(formData: FormData) {
+  const profile = await requireProfile();
+  if (!["rector", "administrador", "secretaria"].includes(profile.role)) {
+    throw new Error("Sin permisos para editar actividades.");
+  }
+  const id = formData.get("id") as string;
+  const input = actividadUpdateSchema.parse({
+    nombre: formData.get("nombre"),
+    peso_porcentual: formData.get("peso_porcentual"),
+    tipo: formData.get("tipo") || "normal",
+    orden: formData.get("orden") || 0,
+  });
+  await editarActividad(id, input);
   revalidatePath("/notas");
 }
 

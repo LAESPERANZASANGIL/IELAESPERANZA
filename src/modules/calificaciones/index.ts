@@ -70,6 +70,19 @@ export async function crearActividad(input: z.infer<typeof actividadEvaluacionSc
   if (error) throw new Error(error.message);
 }
 
+export const actividadUpdateSchema = z.object({
+  nombre: z.string().min(1, "El nombre es obligatorio"),
+  peso_porcentual: z.coerce.number().min(0).max(100),
+  tipo: z.enum(["normal", "recuperacion", "nivelacion"]).default("normal"),
+  orden: z.coerce.number().int().default(0),
+});
+
+export async function editarActividad(id: string, input: z.infer<typeof actividadUpdateSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("actividades_evaluacion").update(input).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function eliminarActividad(id: string) {
   const supabase = await createClient();
   const { count } = await supabase.from("notas").select("id", { count: "exact", head: true }).eq("actividad_id", id);

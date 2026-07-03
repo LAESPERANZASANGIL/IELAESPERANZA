@@ -8,7 +8,7 @@ import { listGrupos, listMallaCurricular, listPeriodos } from "@/modules/academi
 import { listAniosLectivos } from "@/modules/core";
 import { listPlanilla } from "@/modules/calificaciones";
 import { requireProfile } from "@/lib/auth/session";
-import { guardarNotasAction, crearActividadAction, eliminarActividadAction } from "./actions";
+import { guardarNotasAction, crearActividadAction, editarActividadAction, eliminarActividadAction } from "./actions";
 
 export default async function NotasPage({
   searchParams,
@@ -103,35 +103,40 @@ export default async function NotasPage({
                   que el docente registre notas. Los pesos no necesitan sumar exactamente 100, pero se recomienda.
                 </p>
                 {planilla.actividades.length > 0 && (
-                  <Table>
-                    <Thead>
-                      <Th>Nombre</Th>
-                      <Th>Peso %</Th>
-                      <Th>Tipo</Th>
-                      <Th>{""}</Th>
-                    </Thead>
-                    <Tbody>
-                      {planilla.actividades.map((actividad) => (
-                        <tr key={actividad.id}>
-                          <Td>{actividad.nombre}</Td>
-                          <Td>{actividad.peso_porcentual}%</Td>
-                          <Td>{actividad.tipo}</Td>
-                          <Td>
-                            <ActionForm
-                              action={eliminarActividadAction}
-                              confirmMessage="¿Eliminar esta actividad?"
-                              className="inline"
-                            >
-                              <input type="hidden" name="id" value={actividad.id} />
-                              <button className="text-sm font-medium text-red-600 hover:underline" type="submit">
-                                Eliminar
-                              </button>
-                            </ActionForm>
-                          </Td>
-                        </tr>
-                      ))}
-                    </Tbody>
-                  </Table>
+                  <div className="mb-4 divide-y divide-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+                    {planilla.actividades.map((actividad) => (
+                      <ActionForm key={actividad.id} action={editarActividadAction} className="grid gap-3 p-3 sm:grid-cols-5 bg-white hover:bg-slate-50">
+                        <input type="hidden" name="id" value={actividad.id} />
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-slate-500">Nombre</label>
+                          <TextInput name="nombre" defaultValue={actividad.nombre} required className="text-sm" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-slate-500">Peso %</label>
+                          <TextInput name="peso_porcentual" type="number" min={0} max={100} defaultValue={actividad.peso_porcentual} required className="text-sm" />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-slate-500">Tipo</label>
+                          <Select name="tipo" defaultValue={actividad.tipo}>
+                            <option value="normal">Normal</option>
+                            <option value="recuperacion">Recuperación</option>
+                            <option value="nivelacion">Nivelación</option>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-slate-500">Orden</label>
+                          <TextInput name="orden" type="number" defaultValue={actividad.orden} className="text-sm" />
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <SubmitButton>Guardar</SubmitButton>
+                          <ActionForm action={eliminarActividadAction} confirmMessage="¿Eliminar esta actividad?" className="inline flex items-end pb-0.5">
+                            <input type="hidden" name="id" value={actividad.id} />
+                            <button type="submit" className="text-sm font-medium text-red-600 hover:underline">Eliminar</button>
+                          </ActionForm>
+                        </div>
+                      </ActionForm>
+                    ))}
+                  </div>
                 )}
                 <ActionForm action={crearActividadAction} className="mt-4 grid gap-4 sm:grid-cols-5">
                   <input type="hidden" name="malla_curricular_id" value={mallaCurricularId} />
