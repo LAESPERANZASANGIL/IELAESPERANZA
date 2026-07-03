@@ -63,11 +63,11 @@ export default async function LiquidarPeriodoPage({ params }: { params: Promise<
                       <p className="text-xs text-slate-500">Salario: {fmt(Number(e.salario))}</p>
                     </div>
                   </div>
-                  <Field label="Bonificaciones">
-                    <TextInput name="bonificaciones" type="number" min={0} defaultValue={0} />
+                  <Field label="Bonificaciones" htmlFor={`bon_${e.id}`}>
+                    <TextInput id={`bon_${e.id}`} name="bonificaciones" type="number" min={0} defaultValue={0} />
                   </Field>
-                  <Field label="Deducciones">
-                    <TextInput name="deducciones" type="number" min={0} defaultValue={0} />
+                  <Field label="Deducciones" htmlFor={`ded_${e.id}`}>
+                    <TextInput id={`ded_${e.id}`} name="deducciones" type="number" min={0} defaultValue={0} />
                   </Field>
                   <div className="flex items-end">
                     <button type="submit" className="w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700">

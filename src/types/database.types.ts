@@ -131,6 +131,8 @@ export interface InstitucionConfig {
   escudo_url: string | null;
   logo_url: string | null;
   anio_lectivo_activo_id: string | null;
+  mensaje_bienvenida: string | null;
+  slogan: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;

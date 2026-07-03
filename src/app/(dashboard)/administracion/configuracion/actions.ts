@@ -15,6 +15,8 @@ export async function updateInstitucionConfigAction(formData: FormData) {
     escudo_url: formData.get("escudo_url") || undefined,
     logo_url: formData.get("logo_url") || undefined,
     anio_lectivo_activo_id: formData.get("anio_lectivo_activo_id") || undefined,
+    mensaje_bienvenida: formData.get("mensaje_bienvenida") || undefined,
+    slogan: formData.get("slogan") || undefined,
   });
   await upsertInstitucionConfig(input);
   revalidatePath("/administracion/configuracion");

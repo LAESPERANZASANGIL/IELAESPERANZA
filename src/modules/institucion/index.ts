@@ -15,6 +15,8 @@ export const institucionConfigSchema = z.object({
   escudo_url: z.string().url("URL inválida").optional().or(z.literal("")),
   logo_url: z.string().url("URL inválida").optional().or(z.literal("")),
   anio_lectivo_activo_id: z.string().uuid().optional().or(z.literal("")),
+  mensaje_bienvenida: z.string().optional(),
+  slogan: z.string().optional(),
 });
 
 export async function getInstitucionConfig(): Promise<InstitucionConfig | null> {
@@ -42,6 +44,8 @@ export async function upsertInstitucionConfig(input: z.infer<typeof institucionC
     escudo_url: input.escudo_url || null,
     logo_url: input.logo_url || null,
     anio_lectivo_activo_id: input.anio_lectivo_activo_id || null,
+    mensaje_bienvenida: input.mensaje_bienvenida || null,
+    slogan: input.slogan || null,
   });
   if (error) throw new Error(error.message);
 }
