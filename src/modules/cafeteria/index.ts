@@ -160,6 +160,22 @@ export async function createVenta(
   const { error: itemsError } = await supabase.from("cafeteria_venta_items").insert(items);
   if (itemsError) throw new Error(itemsError.message);
 
+  // Descuenta stock de los productos vendidos
+  for (const item of input.items) {
+    if (!item.producto_id) continue;
+    const { data: prod } = await supabase
+      .from("cafeteria_productos")
+      .select("stock")
+      .eq("id", item.producto_id)
+      .single();
+    if (prod) {
+      await supabase
+        .from("cafeteria_productos")
+        .update({ stock: Math.max(0, prod.stock - item.cantidad) })
+        .eq("id", item.producto_id);
+    }
+  }
+
   return venta.id;
 }
 
