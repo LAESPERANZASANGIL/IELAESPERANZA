@@ -135,6 +135,9 @@ export interface InstitucionConfig {
   slogan: string | null;
   info_colegio: string | null;
   correos_adicionales: string | null;
+  enfasis: string | null;
+  resolucion: string | null;
+  secretaria_educacion: string | null;
   created_at: string;
   updated_at: string;
   created_by: string | null;

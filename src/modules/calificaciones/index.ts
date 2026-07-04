@@ -305,7 +305,11 @@ export async function calcularBoletin(
   matriculaId: string,
   periodoId: string,
 ): Promise<{
-  matricula: Matricula & { estudiante: Estudiante };
+  matricula: Matricula & {
+    estudiante: Estudiante;
+    grupo: { nombre: string; grado: { nombre: string } | null; director: { full_name: string } | null } | null;
+    anio: { anio: number } | null;
+  };
   periodo: PeriodoAcademico;
   asignaturas: AsignaturaDelBoletin[];
   promedioGeneral: number | null;
@@ -314,7 +318,7 @@ export async function calcularBoletin(
 
   const { data: matricula, error: matriculaError } = await supabase
     .from("matriculas")
-    .select("*, estudiante:estudiantes(*)")
+    .select("*, estudiante:estudiantes(*), grupo:grupos(nombre, grado:grados(nombre), director:profiles!grupos_director_grupo_id_fkey(full_name)), anio:anios_lectivos(anio)")
     .eq("id", matriculaId)
     .single();
   if (matriculaError) throw new Error(matriculaError.message);
@@ -360,7 +364,11 @@ export async function calcularBoletin(
       : Math.round((promediosValidos.reduce((acc, p) => acc + p, 0) / promediosValidos.length) * 100) / 100;
 
   return {
-    matricula: matricula as unknown as Matricula & { estudiante: Estudiante },
+    matricula: matricula as unknown as Matricula & {
+      estudiante: Estudiante;
+      grupo: { nombre: string; grado: { nombre: string } | null; director: { full_name: string } | null } | null;
+      anio: { anio: number } | null;
+    },
     periodo,
     asignaturas,
     promedioGeneral,

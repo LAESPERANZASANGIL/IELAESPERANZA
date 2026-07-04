@@ -48,12 +48,26 @@ export async function eliminarActividadAction(formData: FormData) {
 
 export async function guardarNotasAction(formData: FormData) {
   const profile = await requireProfile();
-  if (profile.role !== "docente") {
-    throw new Error("Solo el docente asignado puede registrar o modificar notas.");
+  if (!["docente", "rector", "administrador"].includes(profile.role)) {
+    throw new Error("Solo el docente asignado o la administración pueden registrar o modificar notas.");
   }
 
   const mallaCurricularId = formData.get("malla_curricular_id") as string;
   const periodoAcademicoId = formData.get("periodo_academico_id") as string;
+
+  // Un docente solo puede registrar notas en asignaturas que tiene asignadas
+  if (profile.role === "docente") {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: malla } = await supabase
+      .from("malla_curricular")
+      .select("docente_id")
+      .eq("id", mallaCurricularId)
+      .single();
+    if (!malla || malla.docente_id !== profile.id) {
+      throw new Error("Solo puedes registrar notas en las asignaturas que tienes asignadas.");
+    }
+  }
   const motivo = (formData.get("motivo") as string) || undefined;
 
   const entradas: { matricula_id: string; actividad_id: string; valor: number }[] = [];

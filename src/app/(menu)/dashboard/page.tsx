@@ -25,7 +25,13 @@ const MODULE_TILES: ModuleTile[] = [
   {
     label: "Académico",
     href: "/notas",
-    roles: ["docente", "padre_familia", "estudiante"],
+    roles: ["docente"],
+    icon: "🎓",
+  },
+  {
+    label: "Académico",
+    href: "/boletines",
+    roles: ["padre_familia", "estudiante"],
     icon: "🎓",
   },
   {

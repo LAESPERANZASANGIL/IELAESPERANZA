@@ -19,6 +19,9 @@ export const institucionConfigSchema = z.object({
   slogan: z.string().optional(),
   info_colegio: z.string().optional(),
   correos_adicionales: z.string().optional(),
+  enfasis: z.string().optional(),
+  resolucion: z.string().optional(),
+  secretaria_educacion: z.string().optional(),
 });
 
 export async function getInstitucionConfig(): Promise<InstitucionConfig | null> {
@@ -50,6 +53,9 @@ export async function upsertInstitucionConfig(input: z.infer<typeof institucionC
     slogan: input.slogan || null,
     info_colegio: input.info_colegio || null,
     correos_adicionales: input.correos_adicionales || null,
+    enfasis: input.enfasis || null,
+    resolucion: input.resolucion || null,
+    secretaria_educacion: input.secretaria_educacion || null,
   });
   if (error) throw new Error(error.message);
 }

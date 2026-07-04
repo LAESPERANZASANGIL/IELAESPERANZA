@@ -98,6 +98,19 @@ export default async function ConfiguracionInstitucionalPage() {
                 <TextInput id="correos_adicionales" name="correos_adicionales" placeholder="secretaria@col.edu.co, rector@col.edu.co (separados por coma)" defaultValue={config?.correos_adicionales ?? ""} />
               </Field>
             </div>
+            <div className="border-t border-slate-200 pt-4 space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Encabezado del boletín</p>
+              <p className="text-xs text-slate-500">Estos datos aparecen en el encabezado de los boletines de calificaciones.</p>
+              <Field label="Énfasis institucional" htmlFor="enfasis">
+                <TextInput id="enfasis" name="enfasis" placeholder="Ej. ÉNFASIS EN INGLÉS E INFORMÁTICA" defaultValue={config?.enfasis ?? ""} />
+              </Field>
+              <Field label="Resolución de aprobación" htmlFor="resolucion">
+                <TextInput id="resolucion" name="resolucion" placeholder="Ej. Resolución No 023136 del 19 de Diciembre del 2014" defaultValue={config?.resolucion ?? ""} />
+              </Field>
+              <Field label="Secretaría de educación" htmlFor="secretaria_educacion">
+                <TextInput id="secretaria_educacion" name="secretaria_educacion" placeholder="Ej. Secretaría de Educación de Santander" defaultValue={config?.secretaria_educacion ?? ""} />
+              </Field>
+            </div>
             <div className="flex items-center gap-4">
               <SubmitButton>Guardar configuración</SubmitButton>
             </div>
