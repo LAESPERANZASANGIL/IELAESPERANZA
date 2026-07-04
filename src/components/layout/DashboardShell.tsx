@@ -28,20 +28,21 @@ export function DashboardShell({
       )}
 
       <div className="flex min-h-screen flex-1 flex-col lg:ml-0">
-        <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-3 px-4 py-3 lg:hidden" style={{ background: "#0B6B3A" }}>
           <button
             aria-label="Abrir menú"
             onClick={() => setOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
+            style={{ background: "rgba(255,255,255,0.15)" }}
           >
             <span className="sr-only">Menú</span>
             <div className="space-y-1">
-              <span className="block h-0.5 w-4 bg-slate-600" />
-              <span className="block h-0.5 w-4 bg-slate-600" />
-              <span className="block h-0.5 w-4 bg-slate-600" />
+              <span className="block h-0.5 w-4 bg-white" />
+              <span className="block h-0.5 w-4 bg-white" />
+              <span className="block h-0.5 w-4 bg-white" />
             </div>
           </button>
-          <p className="text-sm font-semibold text-slate-900">Campus La Esperanza</p>
+          <p className="text-sm font-bold text-white">La Esperanza</p>
         </div>
 
         <div className="flex-1">{children}</div>
