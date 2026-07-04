@@ -463,3 +463,77 @@ export async function listPromedioAnual(
   const promedioAnual = Math.round((promedios.reduce((acc, p) => acc + p, 0) / promedios.length) * 100) / 100;
   return { promedioAnual, estadoAcademico: calcularEstadoAcademico(promedioAnual) };
 }
+
+// ─── Vista de calificaciones para estudiantes y acudientes (solo lectura) ────
+
+export type NotaDetalle = {
+  actividad_nombre: string;
+  peso_porcentual: number;
+  valor: number;
+};
+
+export type AsignaturaConNotas = {
+  asignatura: Asignatura;
+  notas: NotaDetalle[];
+  acumulado: number | null;
+  desempeno: string | null;
+};
+
+export async function listCalificacionesEstudiante(
+  matriculaId: string,
+  periodoId: string,
+): Promise<AsignaturaConNotas[]> {
+  const supabase = await createClient();
+  const matricula = await getMatricula(matriculaId);
+
+  const { data: mallas, error: mallasError } = await supabase
+    .from("malla_curricular")
+    .select("*, asignatura:asignaturas(*)")
+    .eq("grupo_id", matricula.grupo_id);
+  if (mallasError) throw new Error(mallasError.message);
+
+  const { data: notas, error: notasError } = await supabase
+    .from("notas")
+    .select("*")
+    .eq("matricula_id", matriculaId)
+    .eq("periodo_academico_id", periodoId)
+    .is("anulado_en", null);
+  if (notasError) throw new Error(notasError.message);
+
+  const notasPorMalla = new Map<string, Nota[]>();
+  for (const nota of (notas ?? []) as Nota[]) {
+    const lista = notasPorMalla.get(nota.malla_curricular_id) ?? [];
+    lista.push(nota);
+    notasPorMalla.set(nota.malla_curricular_id, lista);
+  }
+
+  const resultado: AsignaturaConNotas[] = [];
+  for (const malla of (mallas ?? []) as unknown as (MallaCurricular & { asignatura: Asignatura })[]) {
+    const actividades = await listActividades(malla.id, periodoId);
+    const actividadPorId = new Map(actividades.map((a) => [a.id, a]));
+    const notasMalla = notasPorMalla.get(malla.id) ?? [];
+    const acumulado = calcularPromedio(notasMalla, actividades);
+
+    const detalles: NotaDetalle[] = notasMalla
+      .map((n) => {
+        const actividad = n.actividad_id ? actividadPorId.get(n.actividad_id) : undefined;
+        return {
+          actividad_nombre: actividad?.nombre ?? "Actividad",
+          peso_porcentual: Number(actividad?.peso_porcentual ?? 0),
+          valor: n.valor,
+          orden: actividad?.orden ?? 0,
+        };
+      })
+      .sort((a, b) => a.orden - b.orden)
+      .map(({ actividad_nombre, peso_porcentual, valor }) => ({ actividad_nombre, peso_porcentual, valor }));
+
+    resultado.push({
+      asignatura: malla.asignatura,
+      notas: detalles,
+      acumulado,
+      desempeno: acumulado === null ? null : calcularDesempeno(acumulado),
+    });
+  }
+
+  return resultado.sort((a, b) => a.asignatura.nombre.localeCompare(b.asignatura.nombre));
+}

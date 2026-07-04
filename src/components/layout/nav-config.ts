@@ -33,6 +33,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/carga-academica",       label: "Carga académica",         roles: [...STAFF, "docente"], group: "Académico" },
   { href: "/asistencia",            label: "Asistencia",              roles: TODOS,  group: "Académico" },
   { href: "/notas",                 label: "Planilla de calificaciones", roles: [...STAFF, "docente"], group: "Académico" },
+  { href: "/mis-calificaciones",    label: "Mis calificaciones",      roles: ["padre_familia", "estudiante"], group: "Académico" },
   { href: "/boletines",             label: "Boletines",               roles: TODOS,  group: "Académico" },
   { href: "/certificados",          label: "Certificados",            roles: [...STAFF, "padre_familia", "estudiante"], group: "Académico" },
 

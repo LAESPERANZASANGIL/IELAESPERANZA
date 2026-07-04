@@ -30,7 +30,7 @@ const MODULE_TILES: ModuleTile[] = [
   },
   {
     label: "Académico",
-    href: "/boletines",
+    href: "/mis-calificaciones",
     roles: ["padre_familia", "estudiante"],
     icon: "🎓",
   },
