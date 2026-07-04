@@ -19,8 +19,16 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
-  const groups = Array.from(new Set(items.map((item) => item.group)));
+  const itemsDelRol = NAV_ITEMS.filter((item) => item.roles.includes(role));
+
+  // Solo se muestra el grupo (módulo) al que pertenece la página actual.
+  // Se compara por el primer segmento de la ruta: /cafeteria/... → grupo Cafetería.
+  const seccionActual = pathname.split("/")[1] ?? "";
+  const grupoActivo =
+    itemsDelRol.find((item) => item.href.split("/")[1] === seccionActual)?.group ?? null;
+
+  const items = grupoActivo ? itemsDelRol.filter((item) => item.group === grupoActivo) : [];
+  const groups = grupoActivo ? [grupoActivo] : [];
   const initials = fullName
     .split(" ")
     .filter(Boolean)
@@ -67,6 +75,15 @@ export function Sidebar({
 
       {/* Navegación */}
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+        {groups.length === 0 && (
+          <Link
+            href="/dashboard"
+            className="block rounded-lg px-3 py-2 text-sm font-medium"
+            style={{ color: "#0B6B3A" }}
+          >
+            ⊞ Ir al menú principal
+          </Link>
+        )}
         {groups.map((group) => (
           <div key={group}>
             <p
