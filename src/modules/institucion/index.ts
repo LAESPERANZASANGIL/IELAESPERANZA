@@ -1,0 +1,79 @@
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import type { InstitucionConfig } from "@/types/database.types";
+
+const INSTITUCION_CONFIG_ID = "00000000-0000-0000-0000-000000000001";
+
+export const institucionConfigSchema = z.object({
+  nombre: z.string().min(2, "El nombre es obligatorio"),
+  nit: z.string().optional(),
+  codigo_dane: z.string().optional(),
+  direccion: z.string().optional(),
+  telefono: z.string().optional(),
+  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
+  rector_id: z.string().uuid().optional().or(z.literal("")),
+  escudo_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  logo_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  anio_lectivo_activo_id: z.string().uuid().optional().or(z.literal("")),
+  mensaje_bienvenida: z.string().optional(),
+  slogan: z.string().optional(),
+  info_colegio: z.string().optional(),
+  correos_adicionales: z.string().optional(),
+  enfasis: z.string().optional(),
+  resolucion: z.string().optional(),
+  secretaria_educacion: z.string().optional(),
+});
+
+export async function getInstitucionConfig(): Promise<InstitucionConfig | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("institucion_config")
+    .select("*")
+    .eq("id", INSTITUCION_CONFIG_ID)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as InstitucionConfig | null;
+}
+
+export async function upsertInstitucionConfig(input: z.infer<typeof institucionConfigSchema>) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("institucion_config").upsert({
+    id: INSTITUCION_CONFIG_ID,
+    nombre: input.nombre,
+    nit: input.nit || null,
+    codigo_dane: input.codigo_dane || null,
+    direccion: input.direccion || null,
+    telefono: input.telefono || null,
+    correo: input.correo || null,
+    rector_id: input.rector_id || null,
+    escudo_url: input.escudo_url || null,
+    logo_url: input.logo_url || null,
+    anio_lectivo_activo_id: input.anio_lectivo_activo_id || null,
+    mensaje_bienvenida: input.mensaje_bienvenida || null,
+    slogan: input.slogan || null,
+    info_colegio: input.info_colegio || null,
+    correos_adicionales: input.correos_adicionales || null,
+    enfasis: input.enfasis || null,
+    resolucion: input.resolucion || null,
+    secretaria_educacion: input.secretaria_educacion || null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function resetInstitucionConfig() {
+  const supabase = await createClient();
+  const { error } = await supabase.from("institucion_config").upsert({
+    id: INSTITUCION_CONFIG_ID,
+    nombre: "Sin configurar",
+    nit: null,
+    codigo_dane: null,
+    direccion: null,
+    telefono: null,
+    correo: null,
+    rector_id: null,
+    escudo_url: null,
+    logo_url: null,
+    anio_lectivo_activo_id: null,
+  });
+  if (error) throw new Error(error.message);
+}
