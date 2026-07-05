@@ -2,19 +2,19 @@
 """
 Cliente mínimo de la API Web de Spotify (flujo Client Credentials).
 
-Requiere dos variables de entorno (se obtienen gratis en
-https://developer.spotify.com/dashboard creando una aplicación):
-
-    SPOTIFY_CLIENT_ID
-    SPOTIFY_CLIENT_SECRET
+Las credenciales se obtienen gratis en https://developer.spotify.com/dashboard
+creando una aplicación, y se guardan desde la aplicación web (webapp.py) en
+`credenciales.json`, o bien en las variables de entorno SPOTIFY_CLIENT_ID y
+SPOTIFY_CLIENT_SECRET.
 """
 
 import base64
-import os
 import time
 import urllib.parse
 import urllib.request
 import json
+
+from .configuracion import cargar_credenciales
 
 URL_TOKEN = "https://accounts.spotify.com/api/token"
 URL_BUSQUEDA = "https://api.spotify.com/v1/search"
@@ -22,12 +22,15 @@ URL_BUSQUEDA = "https://api.spotify.com/v1/search"
 
 class ClienteSpotify:
     def __init__(self, client_id=None, client_secret=None):
-        self.client_id = client_id or os.environ.get("SPOTIFY_CLIENT_ID")
-        self.client_secret = client_secret or os.environ.get("SPOTIFY_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            client_id, client_secret = cargar_credenciales()
+        self.client_id = client_id
+        self.client_secret = client_secret
         if not self.client_id or not self.client_secret:
             raise RuntimeError(
-                "Faltan las credenciales de Spotify. Defina las variables de entorno "
-                "SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET (ver README del agente)."
+                "Faltan las credenciales de Spotify. Guárdelas desde la aplicación "
+                "web (sección Credenciales) o defina las variables de entorno "
+                "SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET."
             )
         self._token = None
         self._token_expira = 0.0

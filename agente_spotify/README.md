@@ -1,11 +1,27 @@
-# 🎵 Agente de búsqueda de música en Spotify — I.E. La Esperanza
+# 🎵 Agente de música Spotify — I.E. La Esperanza
 
-Agente automático que busca música apta para el entorno escolar en Spotify y
-guarda los resultados en archivos JSON. Solo busca los **20 géneros
-autorizados** por la institución y **excluye toda canción marcada como
-contenido explícito**.
+Aplicación web local que busca música apta para el entorno escolar en Spotify.
+Solo busca los **20 géneros autorizados** por la institución y **excluye toda
+canción marcada como contenido explícito**.
 
-## ⏰ Horarios de activación (hora de Colombia)
+## ▶️ Cómo iniciarla
+
+Requisito único: **Python 3.9 o superior** (<https://www.python.org/downloads/>).
+No hay que instalar librerías.
+
+- **Windows:** doble clic en `iniciar_agente.bat` (en la raíz del repositorio).
+- **Cualquier sistema:** desde la raíz del repositorio:
+
+  ```bash
+  python -m agente_spotify.webapp
+  ```
+
+Se abre automáticamente el panel en el navegador: <http://127.0.0.1:8000>.
+Deje la ventana del programa abierta: el agente se activa y desactiva solo.
+
+## ⏰ Horarios (editables desde el panel web)
+
+Por defecto, **solo de lunes a viernes**, hora de Colombia:
 
 | # | Se activa | Se desactiva |
 |---|-----------|--------------|
@@ -13,7 +29,32 @@ contenido explícito**.
 | 2 | 10:30 a.m. | 10:40 a.m. |
 | 3 | 03:30 p.m. | 03:55 p.m. |
 
-Fuera de esas franjas el agente permanece en espera y no consulta Spotify.
+Desde el panel se pueden **cambiar las horas, agregar o quitar franjas y
+elegir los días** de la semana. Los cambios se guardan en
+`agente_spotify/config.json` y se aplican de inmediato, sin reiniciar.
+
+## 🔑 Credenciales de Spotify (una sola vez)
+
+1. Entre a <https://developer.spotify.com/dashboard> e inicie sesión.
+2. Cree una aplicación (*Create app*) y copie el **Client ID** y el
+   **Client Secret**.
+3. Péguelos en la sección **Credenciales de Spotify** del panel web y pulse
+   *Guardar y probar credenciales*.
+
+Se guardan únicamente en ese computador (`agente_spotify/credenciales.json`,
+excluido de git). **Nunca publique el Client Secret** ni lo suba al
+repositorio.
+
+## 🖥️ Qué ofrece el panel web
+
+- **Estado del agente**: activo / en espera, franja actual y próxima
+  activación (se actualiza solo cada 10 segundos).
+- **Buscar música ahora**: lanza una búsqueda inmediata sin esperar la franja.
+- **Horarios y días**: edición completa de las franjas de activación.
+- **Resultados guardados**: cada activación genera un archivo
+  `musica_AAAAMMDD_HHMM.json` en `agente_spotify/resultados/`, con un visor
+  web que muestra canciones y playlists por género, con enlaces directos para
+  abrirlas en Spotify.
 
 ## 🎼 Géneros autorizados
 
@@ -27,55 +68,20 @@ Música ambiental · Bandas sonoras educativas
 La lista completa, con características y uso recomendado de cada género,
 está en [`generos.py`](generos.py).
 
-## 🔑 Requisitos
-
-1. **Python 3.9 o superior** (no requiere librerías externas).
-2. **Credenciales gratuitas de Spotify**:
-   1. Entre a <https://developer.spotify.com/dashboard> e inicie sesión.
-   2. Cree una aplicación (botón *Create app*).
-   3. Copie el **Client ID** y el **Client Secret**.
-3. Defina las credenciales como variables de entorno:
-
-   ```bash
-   # Linux / macOS
-   export SPOTIFY_CLIENT_ID="su_client_id"
-   export SPOTIFY_CLIENT_SECRET="su_client_secret"
-   ```
-
-   ```powershell
-   # Windows (PowerShell)
-   $env:SPOTIFY_CLIENT_ID = "su_client_id"
-   $env:SPOTIFY_CLIENT_SECRET = "su_client_secret"
-   ```
-
-## ▶️ Cómo ejecutarlo
-
-Desde la raíz del repositorio:
-
-```bash
-# Modo agente: queda en espera y se activa solo en las franjas programadas
-python -m agente_spotify.agente
-
-# Modo prueba: hace una búsqueda inmediata sin esperar el horario
-python -m agente_spotify.agente --ahora
-```
-
-El programa debe dejarse corriendo (por ejemplo, al iniciar el computador de
-la emisora escolar). Él mismo se activa y desactiva según el horario.
-
-## 📁 Resultados
-
-Cada activación genera un archivo en `agente_spotify/resultados/` con el
-formato `musica_AAAAMMDD_HHMM.json`, que contiene por cada género:
-
-- Canciones encontradas (nombre, artistas, álbum, duración y enlace a Spotify).
-- Playlists relacionadas (nombre, autor, número de canciones y enlace).
-
-Todos los enlaces abren directamente en Spotify para reproducir la música.
-
-## 🛡️ Filtros de contenido
+## 🛡️ Filtros y seguridad
 
 - Solo se buscan los géneros de la lista autorizada.
-- Se descartan automáticamente las canciones marcadas por Spotify como
-  **explícitas** (`explicit = true`).
-- Las búsquedas se hacen sobre el mercado de Colombia (`market=CO`).
+- Se descartan las canciones marcadas por Spotify como **explícitas**.
+- Búsquedas sobre el mercado de Colombia (`market=CO`).
+- El panel solo es accesible desde el propio computador (127.0.0.1).
+
+## 🧰 Modo consola (opcional)
+
+Si se prefiere sin navegador:
+
+```bash
+python -m agente_spotify.agente          # espera las franjas y busca solo
+python -m agente_spotify.agente --ahora  # búsqueda inmediata de prueba
+```
+
+Usa la misma configuración de horarios y credenciales del panel web.

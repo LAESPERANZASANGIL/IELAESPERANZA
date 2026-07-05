@@ -1,3 +1,5 @@
 agente_spotify/resultados/*.json
+agente_spotify/credenciales.json
+agente_spotify/config.json
 __pycache__/
 *.pyc

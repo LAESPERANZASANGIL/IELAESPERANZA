@@ -1,0 +1,522 @@
+# -*- coding: utf-8 -*-
+"""
+Aplicación web local del Agente de música Spotify — I.E. La Esperanza.
+
+Se ejecuta en el PC (no necesita internet salvo para consultar Spotify) y
+permite:
+
+  - Ver el estado del agente (activo / en espera, próxima activación).
+  - Modificar las franjas horarias y los días de ejecución (por defecto,
+    lunes a viernes).
+  - Guardar las credenciales de Spotify de forma local.
+  - Lanzar una búsqueda inmediata y consultar los resultados guardados.
+
+Uso:
+    python -m agente_spotify.webapp
+    (se abre automáticamente en el navegador: http://127.0.0.1:8000)
+
+Solo usa la librería estándar de Python: no hay que instalar nada.
+"""
+
+import argparse
+import html
+import json
+import threading
+import time
+import urllib.error
+import urllib.parse
+import webbrowser
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+from .agente import (
+    CARPETA_RESULTADOS,
+    ahora_colombia,
+    ejecutar_busqueda,
+    fin_de_franja,
+    franja_activa,
+    proxima_activacion,
+)
+from .configuracion import (
+    NOMBRES_DIAS,
+    cargar_config,
+    cargar_credenciales,
+    guardar_config,
+    guardar_credenciales,
+)
+from .spotify_api import ClienteSpotify
+
+# ---------------------------------------------------------------------- #
+# Estado compartido entre el planificador y la interfaz web
+# ---------------------------------------------------------------------- #
+_candado = threading.Lock()
+_estado = {
+    "buscando": False,
+    "progreso": "",
+    "ultima_busqueda": None,
+    "ultimo_archivo": None,
+    "ultimo_error": None,
+}
+
+
+def _actualizar_estado(**cambios):
+    with _candado:
+        _estado.update(cambios)
+
+
+def _leer_estado():
+    with _candado:
+        return dict(_estado)
+
+
+# ---------------------------------------------------------------------- #
+def _correr_busqueda(origen):
+    """Ejecuta una búsqueda completa actualizando el estado compartido."""
+    with _candado:
+        if _estado["buscando"]:
+            return
+        _estado["buscando"] = True
+        _estado["progreso"] = "Conectando con Spotify..."
+        _estado["ultimo_error"] = None
+    try:
+        cliente = ClienteSpotify()
+
+        def avance(genero, indice, total):
+            _actualizar_estado(progreso=f"Buscando {indice}/{total}: {genero}")
+
+        momento = ahora_colombia()
+        archivo = ejecutar_busqueda(cliente, momento, al_avanzar=avance)
+        _actualizar_estado(
+            ultima_busqueda=f"{momento:%Y-%m-%d %I:%M %p} ({origen})",
+            ultimo_archivo=archivo.name,
+        )
+    except Exception as error:  # noqa: BLE001 - se muestra en la interfaz
+        _actualizar_estado(ultimo_error=str(error))
+    finally:
+        _actualizar_estado(buscando=False, progreso="")
+
+
+class Planificador(threading.Thread):
+    """Hilo que activa el agente automáticamente en las franjas configuradas."""
+
+    def __init__(self):
+        super().__init__(daemon=True)
+        self._ultima_clave = None
+
+    def run(self):
+        while True:
+            try:
+                config = cargar_config()
+                momento = ahora_colombia()
+                franja = franja_activa(momento, config)
+                if franja:
+                    clave = f"{momento:%Y-%m-%d}|{franja['inicio']}"
+                    if clave != self._ultima_clave:
+                        self._ultima_clave = clave
+                        _correr_busqueda("automática")
+            except Exception as error:  # noqa: BLE001
+                _actualizar_estado(ultimo_error=str(error))
+            time.sleep(20)
+
+
+# ---------------------------------------------------------------------- #
+# Interfaz web
+# ---------------------------------------------------------------------- #
+ESTILOS = """
+:root { font-family: 'Segoe UI', Arial, sans-serif; }
+body { margin:0; background:#f4f6f8; color:#20303c; }
+header { background:#1DB954; color:#fff; padding:18px 28px; }
+header h1 { margin:0; font-size:1.35rem; }
+header p { margin:4px 0 0; opacity:.9; font-size:.9rem; }
+main { max-width:960px; margin:24px auto; padding:0 16px; display:grid; gap:20px; }
+.tarjeta { background:#fff; border-radius:10px; padding:20px 24px;
+           box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.tarjeta h2 { margin:0 0 12px; font-size:1.05rem; color:#128a40; }
+table { border-collapse:collapse; width:100%; }
+th, td { text-align:left; padding:6px 10px; border-bottom:1px solid #e4e8eb; font-size:.92rem; }
+input[type=time], input[type=text], input[type=password] {
+  padding:6px 8px; border:1px solid #c6cdd3; border-radius:6px; font-size:.95rem; }
+button { background:#1DB954; color:#fff; border:none; border-radius:6px;
+         padding:8px 16px; font-size:.95rem; cursor:pointer; }
+button:hover { background:#169c46; }
+button.secundario { background:#5b6b78; }
+button.peligro { background:#c0392b; padding:4px 10px; }
+.estado-activo { color:#128a40; font-weight:700; }
+.estado-espera { color:#5b6b78; font-weight:700; }
+.error { background:#fdecea; color:#b3271e; padding:10px 14px; border-radius:8px; }
+.aviso { background:#e8f7ee; color:#128a40; padding:10px 14px; border-radius:8px; }
+.dias label { margin-right:14px; font-size:.95rem; }
+a { color:#128a40; }
+.fila-franja td { border:none; padding:4px 6px; }
+small { color:#5b6b78; }
+"""
+
+GUION_JS = """
+function agregarFranja(inicio, fin) {
+  const tabla = document.getElementById('tabla-franjas');
+  const fila = document.createElement('tr');
+  fila.className = 'fila-franja';
+  fila.innerHTML =
+    '<td><input type="time" name="inicio" required value="' + (inicio||'') + '"></td>' +
+    '<td><input type="time" name="fin" required value="' + (fin||'') + '"></td>' +
+    '<td><button type="button" class="peligro" ' +
+    'onclick="this.closest(\\'tr\\').remove()">Quitar</button></td>';
+  tabla.appendChild(fila);
+}
+async function refrescarEstado() {
+  try {
+    const r = await fetch('/estado.json');
+    const e = await r.json();
+    document.getElementById('estado-agente').innerHTML = e.html_estado;
+  } catch (err) { /* sin conexión momentánea: se reintenta */ }
+}
+setInterval(refrescarEstado, 10000);
+"""
+
+
+def _html_estado():
+    """Fragmento HTML con el estado actual del agente."""
+    config = cargar_config()
+    momento = ahora_colombia()
+    franja = franja_activa(momento, config)
+    estado = _leer_estado()
+    partes = []
+
+    if estado["buscando"]:
+        partes.append(
+            f"<p class='estado-activo'>⏳ {html.escape(estado['progreso'] or 'Buscando música...')}</p>"
+        )
+    elif franja:
+        fin = fin_de_franja(momento, franja)
+        partes.append(
+            f"<p class='estado-activo'>🟢 AGENTE ACTIVO — franja "
+            f"{franja['inicio']}–{franja['fin']} (se desactiva a las {fin:%I:%M %p})</p>"
+        )
+    else:
+        proxima = proxima_activacion(momento, config)
+        dia = NOMBRES_DIAS[proxima.weekday()] if proxima else "—"
+        partes.append(
+            "<p class='estado-espera'>⚪ En espera — próxima activación: "
+            f"{dia} {proxima:%d/%m a las %I:%M %p}</p>"
+        )
+
+    if estado["ultima_busqueda"]:
+        enlace = ""
+        if estado["ultimo_archivo"]:
+            nombre = html.escape(estado["ultimo_archivo"])
+            enlace = f" — <a href='/ver/{nombre}'>ver resultados</a>"
+        partes.append(
+            f"<p><small>Última búsqueda: {html.escape(estado['ultima_busqueda'])}{enlace}</small></p>"
+        )
+    if estado["ultimo_error"]:
+        partes.append(f"<div class='error'>⚠️ {html.escape(estado['ultimo_error'])}</div>")
+    partes.append(
+        f"<p><small>Hora de Colombia: {NOMBRES_DIAS[momento.weekday()]} "
+        f"{momento:%d/%m/%Y, %I:%M %p}</small></p>"
+    )
+    return "".join(partes)
+
+
+def _pagina_principal(mensaje=None, error=None):
+    config = cargar_config()
+    client_id, client_secret = cargar_credenciales()
+    hay_credenciales = bool(client_id and client_secret)
+
+    avisos = ""
+    if mensaje:
+        avisos += f"<div class='aviso'>✅ {html.escape(mensaje)}</div>"
+    if error:
+        avisos += f"<div class='error'>⚠️ {html.escape(error)}</div>"
+
+    franjas_js = "".join(
+        f"agregarFranja('{f['inicio']}', '{f['fin']}');" for f in config["franjas"]
+    )
+    dias_html = "".join(
+        f"<label><input type='checkbox' name='dias' value='{i}' "
+        f"{'checked' if i in config['dias'] else ''}> {nombre}</label>"
+        for i, nombre in enumerate(NOMBRES_DIAS)
+    )
+
+    if CARPETA_RESULTADOS.exists():
+        archivos = sorted(CARPETA_RESULTADOS.glob("musica_*.json"), reverse=True)[:30]
+    else:
+        archivos = []
+    if archivos:
+        filas = "".join(
+            f"<tr><td>{html.escape(a.name)}</td>"
+            f"<td><a href='/ver/{html.escape(a.name)}'>Ver</a></td>"
+            f"<td><a href='/resultados/{html.escape(a.name)}' download>Descargar JSON</a></td></tr>"
+            for a in archivos
+        )
+        tabla_resultados = f"<table><tr><th>Archivo</th><th></th><th></th></tr>{filas}</table>"
+    else:
+        tabla_resultados = "<p><small>Aún no hay resultados guardados.</small></p>"
+
+    credencial_estado = (
+        "<p class='estado-activo'>✔ Credenciales configuradas.</p>"
+        if hay_credenciales
+        else "<div class='error'>Aún no hay credenciales de Spotify. "
+        "Créelas gratis en <a href='https://developer.spotify.com/dashboard' "
+        "target='_blank'>developer.spotify.com/dashboard</a> y péguelas aquí.</div>"
+    )
+
+    return f"""<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agente de música Spotify — I.E. La Esperanza</title>
+<style>{ESTILOS}</style>
+</head><body>
+<header>
+  <h1>🎵 Agente de música Spotify — I.E. La Esperanza</h1>
+  <p>Busca solo los 20 géneros autorizados, sin contenido explícito.</p>
+</header>
+<main>
+{avisos}
+
+<section class="tarjeta">
+  <h2>Estado del agente</h2>
+  <div id="estado-agente">{_html_estado()}</div>
+  <form method="post" action="/buscar-ahora" style="margin-top:10px">
+    <button type="submit">🔍 Buscar música ahora</button>
+  </form>
+</section>
+
+<section class="tarjeta">
+  <h2>Horarios de activación</h2>
+  <p><small>El agente se activa en cada franja y se desactiva al terminar.
+  Hora de Colombia (America/Bogota).</small></p>
+  <form method="post" action="/guardar-horarios">
+    <table>
+      <tr><th>Se activa</th><th>Se desactiva</th><th></th></tr>
+      <tbody id="tabla-franjas"></tbody>
+    </table>
+    <p><button type="button" class="secundario" onclick="agregarFranja('','')">
+      ➕ Agregar franja</button></p>
+    <h2>Días de ejecución</h2>
+    <p class="dias">{dias_html}</p>
+    <button type="submit">💾 Guardar horarios y días</button>
+  </form>
+</section>
+
+<section class="tarjeta">
+  <h2>Credenciales de Spotify</h2>
+  {credencial_estado}
+  <form method="post" action="/guardar-credenciales">
+    <p><input type="text" name="client_id" placeholder="Client ID" size="40"
+       value="{html.escape(client_id or '')}"></p>
+    <p><input type="password" name="client_secret" placeholder="Client Secret" size="40"></p>
+    <button type="submit">💾 Guardar y probar credenciales</button>
+  </form>
+  <p><small>Se guardan solo en este computador (archivo credenciales.json,
+  excluido de git).</small></p>
+</section>
+
+<section class="tarjeta">
+  <h2>Resultados guardados</h2>
+  {tabla_resultados}
+</section>
+</main>
+<script>{GUION_JS}{franjas_js}</script>
+</body></html>"""
+
+
+def _pagina_resultado(nombre_archivo):
+    ruta = CARPETA_RESULTADOS / nombre_archivo
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    secciones = []
+    for genero in datos.get("generos", []):
+        filas = "".join(
+            f"<tr><td>{html.escape(c.get('nombre') or '')}</td>"
+            f"<td>{html.escape(', '.join(c.get('artistas') or []))}</td>"
+            f"<td>{c.get('duracion_min', '')} min</td>"
+            f"<td><a href='{html.escape(c.get('enlace') or '#')}' target='_blank'>▶ Abrir en Spotify</a></td></tr>"
+            for c in genero.get("canciones", [])
+        ) or "<tr><td colspan='4'><small>Sin canciones encontradas.</small></td></tr>"
+        listas = "".join(
+            f"<li><a href='{html.escape(p.get('enlace') or '#')}' target='_blank'>"
+            f"{html.escape(p.get('nombre') or '')}</a> "
+            f"<small>({p.get('total_canciones', '?')} canciones)</small></li>"
+            for p in genero.get("playlists", [])
+        )
+        secciones.append(f"""
+<section class="tarjeta">
+  <h2>{html.escape(genero['genero'])}</h2>
+  <p><small>{html.escape(genero.get('caracteristicas', ''))} —
+  <b>Uso:</b> {html.escape(genero.get('uso_recomendado', ''))}</small></p>
+  <table><tr><th>Canción</th><th>Artistas</th><th>Duración</th><th></th></tr>{filas}</table>
+  {f"<p><b>Playlists:</b></p><ul>{listas}</ul>" if listas else ""}
+</section>""")
+
+    fecha = html.escape(datos.get("fecha_hora", ""))
+    return f"""<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultados — {html.escape(nombre_archivo)}</title>
+<style>{ESTILOS}</style></head><body>
+<header><h1>🎵 Resultados de búsqueda</h1><p>{fecha}</p></header>
+<main>
+<p><a href="/">← Volver al panel</a></p>
+{''.join(secciones)}
+</main></body></html>"""
+
+
+# ---------------------------------------------------------------------- #
+class Manejador(BaseHTTPRequestHandler):
+    server_version = "AgenteSpotifyIE/1.0"
+
+    # --------------------------- utilidades --------------------------- #
+    def _responder_html(self, contenido, codigo=200):
+        datos = contenido.encode("utf-8")
+        self.send_response(codigo)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(datos)))
+        self.end_headers()
+        self.wfile.write(datos)
+
+    def _redirigir(self, destino):
+        self.send_response(303)
+        self.send_header("Location", destino)
+        self.end_headers()
+
+    def _leer_formulario(self):
+        longitud = int(self.headers.get("Content-Length", 0))
+        cuerpo = self.rfile.read(longitud).decode("utf-8")
+        return urllib.parse.parse_qs(cuerpo, keep_blank_values=True)
+
+    def _archivo_seguro(self, nombre):
+        """Evita rutas maliciosas: solo archivos musica_*.json de resultados."""
+        nombre = urllib.parse.unquote(nombre)
+        if "/" in nombre or "\\" in nombre or not nombre.endswith(".json"):
+            return None
+        ruta = CARPETA_RESULTADOS / nombre
+        return ruta if ruta.is_file() else None
+
+    def log_message(self, formato, *args):  # silencia el log por consola
+        pass
+
+    # ------------------------------ GET ------------------------------- #
+    def do_GET(self):
+        url = urllib.parse.urlparse(self.path)
+        parametros = urllib.parse.parse_qs(url.query)
+
+        if url.path == "/":
+            self._responder_html(
+                _pagina_principal(
+                    mensaje=(parametros.get("msg") or [None])[0],
+                    error=(parametros.get("err") or [None])[0],
+                )
+            )
+        elif url.path == "/estado.json":
+            datos = json.dumps({"html_estado": _html_estado()}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(datos)))
+            self.end_headers()
+            self.wfile.write(datos)
+        elif url.path.startswith("/ver/"):
+            ruta = self._archivo_seguro(url.path[len("/ver/"):])
+            if ruta:
+                self._responder_html(_pagina_resultado(ruta.name))
+            else:
+                self._responder_html("<h1>Archivo no encontrado</h1>", 404)
+        elif url.path.startswith("/resultados/"):
+            ruta = self._archivo_seguro(url.path[len("/resultados/"):])
+            if ruta:
+                datos = ruta.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(datos)))
+                self.end_headers()
+                self.wfile.write(datos)
+            else:
+                self._responder_html("<h1>Archivo no encontrado</h1>", 404)
+        else:
+            self._responder_html("<h1>Página no encontrada</h1>", 404)
+
+    # ------------------------------ POST ------------------------------ #
+    def do_POST(self):
+        url = urllib.parse.urlparse(self.path)
+        formulario = self._leer_formulario()
+
+        if url.path == "/guardar-horarios":
+            inicios = formulario.get("inicio", [])
+            fines = formulario.get("fin", [])
+            dias = [int(d) for d in formulario.get("dias", [])]
+            franjas = [
+                {"inicio": i, "fin": f} for i, f in zip(inicios, fines) if i or f
+            ]
+            try:
+                guardar_config({"franjas": franjas, "dias": dias})
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "Horarios y días guardados correctamente."))
+            except ValueError as error:
+                self._redirigir("/?err=" + urllib.parse.quote(str(error)))
+
+        elif url.path == "/guardar-credenciales":
+            client_id = (formulario.get("client_id") or [""])[0].strip()
+            client_secret = (formulario.get("client_secret") or [""])[0].strip()
+            if not client_id or not client_secret:
+                self._redirigir("/?err=" + urllib.parse.quote(
+                    "Debe escribir el Client ID y el Client Secret."))
+                return
+            try:
+                cliente = ClienteSpotify(client_id, client_secret)
+                cliente._obtener_token()  # prueba real contra Spotify
+                guardar_credenciales(client_id, client_secret)
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "Credenciales válidas y guardadas."))
+            except urllib.error.HTTPError:
+                # Spotify respondió pero no aceptó las credenciales
+                self._redirigir("/?err=" + urllib.parse.quote(
+                    "Spotify rechazó esas credenciales. Verifique el Client ID "
+                    "y el Client Secret e intente de nuevo."))
+            except Exception:  # noqa: BLE001 - sin conexión: se guardan igual
+                guardar_credenciales(client_id, client_secret)
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "Credenciales guardadas, pero no se pudieron verificar "
+                    "porque no hay conexión con Spotify en este momento."))
+
+        elif url.path == "/buscar-ahora":
+            if _leer_estado()["buscando"]:
+                self._redirigir("/?err=" + urllib.parse.quote(
+                    "Ya hay una búsqueda en curso; espere a que termine."))
+            else:
+                threading.Thread(
+                    target=_correr_busqueda, args=("manual",), daemon=True
+                ).start()
+                time.sleep(0.5)  # deja arrancar la búsqueda antes de refrescar
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "Búsqueda iniciada. El estado se actualiza automáticamente."))
+        else:
+            self._responder_html("<h1>Página no encontrada</h1>", 404)
+
+
+# ---------------------------------------------------------------------- #
+def main():
+    parser = argparse.ArgumentParser(
+        description="Aplicación web del agente de música Spotify (I.E. La Esperanza)."
+    )
+    parser.add_argument("--puerto", type=int, default=8000,
+                        help="Puerto local (por defecto 8000).")
+    parser.add_argument("--sin-navegador", action="store_true",
+                        help="No abrir el navegador automáticamente.")
+    argumentos = parser.parse_args()
+
+    Planificador().start()
+
+    direccion = ("127.0.0.1", argumentos.puerto)
+    servidor = ThreadingHTTPServer(direccion, Manejador)
+    url = f"http://127.0.0.1:{argumentos.puerto}"
+    print(f"Aplicación web del agente iniciada en {url}")
+    print("Deje esta ventana abierta: el agente se activa solo en los horarios "
+          "configurados (lunes a viernes por defecto). Ctrl+C para salir.")
+    if not argumentos.sin_navegador:
+        threading.Timer(1.0, webbrowser.open, [url]).start()
+    try:
+        servidor.serve_forever()
+    except KeyboardInterrupt:
+        print("\nAplicación detenida.")
+
+
+if __name__ == "__main__":
+    main()
