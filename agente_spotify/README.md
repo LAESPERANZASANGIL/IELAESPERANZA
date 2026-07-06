@@ -4,20 +4,49 @@ Aplicación web local que busca música apta para el entorno escolar en Spotify.
 Solo busca los **20 géneros autorizados** por la institución y **excluye toda
 canción marcada como contenido explícito**.
 
-## ▶️ Cómo iniciarla
+## 📦 Instalación para usuario final (Windows)
 
-Requisito único: **Python 3.9 o superior** (<https://www.python.org/downloads/>).
-No hay que instalar librerías.
+Haga **doble clic en `instalar.bat`** (en la raíz del repositorio). El
+instalador hace todo solo:
 
-- **Windows:** doble clic en `iniciar_agente.bat` (en la raíz del repositorio).
-- **Cualquier sistema:** desde la raíz del repositorio:
+1. **Instala Python automáticamente** si el computador no lo tiene
+   (descarga silenciosa desde python.org).
+2. Crea el acceso directo **"Agente de música Spotify"** en el Escritorio.
+3. Configura el agente para **arrancar solo al encender el computador**
+   (queda en la carpeta de Inicio de Windows, sin ventanas visibles).
+4. Inicia la aplicación de inmediato.
 
-  ```bash
-  python -m agente_spotify.webapp
-  ```
+## ▶️ Inicio manual (alternativa)
+
+- **Windows:** doble clic en `iniciar_agente.bat`.
+- **Cualquier sistema:** `python -m agente_spotify.webapp`
+  (requiere Python 3.9+; no usa librerías externas).
 
 Se abre automáticamente el panel en el navegador: <http://127.0.0.1:8000>.
-Deje la ventana del programa abierta: el agente se activa y desactiva solo.
+Si la aplicación ya estaba corriendo, el doble clic solo abre el panel.
+
+## 🔊 Reproducción automática — la música suena sola
+
+Con esta función, al llegar cada franja el agente **busca la música Y la pone
+a sonar sin intervención humana**, y la **detiene solo** al terminar la franja.
+
+Requisitos de Spotify (los exige Spotify, no el programa):
+
+- Cuenta **Spotify Premium** de la institución.
+- La **aplicación de Spotify abierta** en el computador (sesión iniciada).
+
+Configuración (una sola vez):
+
+1. En <https://developer.spotify.com/dashboard> → su aplicación → *Settings*,
+   agregue esta **Redirect URI** y guarde: `http://127.0.0.1:8000/callback`
+2. En el panel web, sección **Reproducción automática**, pulse
+   **"🔗 Conectar cuenta de Spotify"** e inicie sesión con la cuenta Premium.
+3. Marque **"Reproducir música automáticamente al llegar cada franja"**,
+   elija los géneros que pueden sonar y guarde.
+
+Desde ese momento la música arranca y se detiene sola en cada franja. El
+botón **"▶ Probar: sonar ahora"** permite verificar sin esperar el horario.
+El permiso queda en `token_spotify.json` (solo local, excluido de git).
 
 ## ⏰ Horarios (editables desde el panel web)
 

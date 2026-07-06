@@ -21,6 +21,7 @@ Solo usa la librería estándar de Python: no hay que instalar nada.
 import argparse
 import html
 import json
+import random
 import threading
 import time
 import urllib.error
@@ -28,6 +29,7 @@ import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from . import reproductor
 from .agente import (
     CARPETA_RESULTADOS,
     ahora_colombia,
@@ -43,6 +45,7 @@ from .configuracion import (
     guardar_config,
     guardar_credenciales,
 )
+from .generos import GENEROS_AUTORIZADOS
 from .spotify_api import ClienteSpotify
 
 # ---------------------------------------------------------------------- #
@@ -55,6 +58,8 @@ _estado = {
     "ultima_busqueda": None,
     "ultimo_archivo": None,
     "ultimo_error": None,
+    "musica_sonando": False,
+    "mensaje_musica": None,
 }
 
 
@@ -95,12 +100,71 @@ def _correr_busqueda(origen):
         _actualizar_estado(buscando=False, progreso="")
 
 
+def _uris_para_reproducir(config):
+    """Canciones (URIs) del último resultado, según los géneros elegidos."""
+    archivos = sorted(CARPETA_RESULTADOS.glob("musica_*.json"), reverse=True)
+    if not archivos:
+        return []
+    datos = json.loads(archivos[0].read_text(encoding="utf-8"))
+    elegidos = set(config.get("generos_reproduccion") or [])
+    uris = []
+    for genero in datos.get("generos", []):
+        if elegidos and genero["genero"] not in elegidos:
+            continue
+        uris.extend(
+            c["uri"] for c in genero.get("canciones", []) if c.get("uri")
+        )
+    random.shuffle(uris)
+    return uris
+
+
+def _encender_musica(config, origen):
+    """Pone a sonar la música sin intervención humana. Devuelve True si sonó."""
+    try:
+        uris = _uris_para_reproducir(config)
+        if not uris:
+            raise RuntimeError(
+                "El último resultado no tiene canciones con URI; ejecute una "
+                "búsqueda primero."
+            )
+        aparato = reproductor.iniciar_reproduccion(uris)
+        _actualizar_estado(
+            musica_sonando=True,
+            mensaje_musica=f"🎵 Música sonando en «{aparato}» ({origen}).",
+        )
+        return True
+    except Exception as error:  # noqa: BLE001
+        _actualizar_estado(
+            musica_sonando=False,
+            mensaje_musica=f"No se pudo reproducir: {error}",
+        )
+        return False
+
+
+def _apagar_musica():
+    try:
+        reproductor.pausar()
+        _actualizar_estado(
+            musica_sonando=False,
+            mensaje_musica="⏸ Música detenida (fin de la franja).",
+        )
+    except Exception as error:  # noqa: BLE001
+        _actualizar_estado(musica_sonando=False,
+                           mensaje_musica=f"No se pudo pausar: {error}")
+
+
 class Planificador(threading.Thread):
-    """Hilo que activa el agente automáticamente en las franjas configuradas."""
+    """Hilo que activa el agente automáticamente en las franjas configuradas.
+
+    Al iniciar una franja: busca música y, si la reproducción automática está
+    activada y hay cuenta conectada, la pone a sonar sin intervención humana.
+    Al terminar la franja: detiene la música.
+    """
 
     def __init__(self):
         super().__init__(daemon=True)
         self._ultima_clave = None
+        self._sono_en_franja = False
 
     def run(self):
         while True:
@@ -108,11 +172,21 @@ class Planificador(threading.Thread):
                 config = cargar_config()
                 momento = ahora_colombia()
                 franja = franja_activa(momento, config)
+                auto = (config.get("reproduccion_automatica")
+                        and reproductor.hay_cuenta_conectada())
                 if franja:
                     clave = f"{momento:%Y-%m-%d}|{franja['inicio']}"
                     if clave != self._ultima_clave:
                         self._ultima_clave = clave
+                        self._sono_en_franja = False
                         _correr_busqueda("automática")
+                    if auto and not self._sono_en_franja:
+                        # reintenta cada ciclo hasta lograr que suene
+                        self._sono_en_franja = _encender_musica(
+                            config, "activación automática"
+                        )
+                elif _leer_estado()["musica_sonando"]:
+                    _apagar_musica()
             except Exception as error:  # noqa: BLE001
                 _actualizar_estado(ultimo_error=str(error))
             time.sleep(20)
@@ -239,6 +313,13 @@ def _html_estado():
         partes.append(
             f"<p><small>Última búsqueda: {html.escape(estado['ultima_busqueda'])}{enlace}</small></p>"
         )
+    if estado["mensaje_musica"]:
+        clase = "aviso" if estado["musica_sonando"] else "error"
+        if estado["mensaje_musica"].startswith("⏸"):
+            clase = "aviso"
+        partes.append(
+            f"<div class='{clase}'>{html.escape(estado['mensaje_musica'])}</div>"
+        )
     if estado["ultimo_error"]:
         partes.append(f"<div class='error'>⚠️ {html.escape(estado['ultimo_error'])}</div>")
     partes.append(
@@ -246,6 +327,56 @@ def _html_estado():
         f"{momento:%d/%m/%Y, %I:%M %p}</small></p>"
     )
     return "".join(partes)
+
+
+def _seccion_reproduccion(config):
+    """Sección del panel para conectar la cuenta y activar la música sola."""
+    if not reproductor.hay_cuenta_conectada():
+        return """
+  <p>Para que la música <b>suene sola</b> al llegar cada franja, conecte la
+  cuenta de Spotify de la institución (una sola vez).</p>
+  <ol>
+    <li>Requiere cuenta <b>Spotify Premium</b> y la aplicación de Spotify
+        abierta en este computador (con sesión iniciada).</li>
+    <li>En <a href="https://developer.spotify.com/dashboard" target="_blank">
+        developer.spotify.com/dashboard</a> → su aplicación → <i>Settings</i>,
+        agregue esta <b>Redirect URI</b> y guarde:
+        <code>http://127.0.0.1:8000/callback</code></li>
+    <li>Luego pulse el botón:</li>
+  </ol>
+  <form method="get" action="/autorizar">
+    <button type="submit">🔗 Conectar cuenta de Spotify</button>
+  </form>"""
+
+    marcados = set(config.get("generos_reproduccion") or [])
+    casillas = "".join(
+        f"<label style='display:inline-block;width:270px'>"
+        f"<input type='checkbox' name='generos' value='{html.escape(g['genero'])}' "
+        f"{'checked' if (not marcados or g['genero'] in marcados) else ''}> "
+        f"{html.escape(g['genero'])}</label>"
+        for g in GENEROS_AUTORIZADOS
+    )
+    activada = "checked" if config.get("reproduccion_automatica") else ""
+    return f"""
+  <p class="estado-activo">✔ Cuenta de Spotify conectada.</p>
+  <form method="post" action="/guardar-reproduccion">
+    <p><label><input type="checkbox" name="activa" {activada}>
+      <b>Reproducir música automáticamente al llegar cada franja</b>
+      (y detenerla sola al terminar)</label></p>
+    <p><small>La música suena en la aplicación de Spotify de este computador:
+    manténgala abierta. Géneros que pueden sonar:</small></p>
+    <p>{casillas}</p>
+    <button type="submit">💾 Guardar reproducción automática</button>
+  </form>
+  <form method="post" action="/reproducir-ahora" style="display:inline">
+    <button type="submit">▶ Probar: sonar ahora</button>
+  </form>
+  <form method="post" action="/detener-musica" style="display:inline">
+    <button type="submit" class="secundario">⏸ Detener música</button>
+  </form>
+  <form method="post" action="/desconectar-spotify" style="display:inline">
+    <button type="submit" class="peligro">Desconectar cuenta</button>
+  </form>"""
 
 
 def _pagina_principal(mensaje=None, error=None):
@@ -328,6 +459,11 @@ def _pagina_principal(mensaje=None, error=None):
     <p class="dias">{dias_html}</p>
     <button type="submit">💾 Guardar horarios y días</button>
   </form>
+</section>
+
+<section class="tarjeta">
+  <h2>🔊 Reproducción automática (sin intervención humana)</h2>
+  {_seccion_reproduccion(config)}
 </section>
 
 <section class="tarjeta">
@@ -455,6 +591,29 @@ class Manejador(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(datos)))
             self.end_headers()
             self.wfile.write(datos)
+        elif url.path == "/autorizar":
+            try:
+                redirect = f"http://{self.headers.get('Host')}/callback"
+                self._redirigir(reproductor.url_autorizacion(redirect))
+            except Exception as error:  # noqa: BLE001
+                self._redirigir("/?err=" + urllib.parse.quote(str(error)))
+        elif url.path == "/callback":
+            codigo = (parametros.get("code") or [None])[0]
+            estado_oauth = (parametros.get("state") or [None])[0]
+            if not codigo:
+                detalle = (parametros.get("error") or ["autorización cancelada"])[0]
+                self._redirigir("/?err=" + urllib.parse.quote(
+                    f"Spotify no autorizó la cuenta: {detalle}"))
+                return
+            try:
+                redirect = f"http://{self.headers.get('Host')}/callback"
+                reproductor.intercambiar_codigo(codigo, estado_oauth, redirect)
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "Cuenta de Spotify conectada. Ya puede activar la "
+                    "reproducción automática."))
+            except Exception as error:  # noqa: BLE001
+                self._redirigir("/?err=" + urllib.parse.quote(
+                    f"No se pudo conectar la cuenta: {error}"))
         elif url.path.startswith("/ver/"):
             ruta = self._archivo_seguro(url.path[len("/ver/"):])
             if ruta:
@@ -488,7 +647,9 @@ class Manejador(BaseHTTPRequestHandler):
                 {"inicio": i, "fin": f} for i, f in zip(inicios, fines) if i or f
             ]
             try:
-                guardar_config({"franjas": franjas, "dias": dias})
+                config = cargar_config()  # conserva las demás opciones
+                config.update({"franjas": franjas, "dias": dias})
+                guardar_config(config)
                 self._redirigir("/?msg=" + urllib.parse.quote(
                     "Horarios y días guardados correctamente."))
             except ValueError as error:
@@ -518,6 +679,38 @@ class Manejador(BaseHTTPRequestHandler):
                     "Credenciales guardadas, pero no se pudieron verificar "
                     "porque no hay conexión con Spotify en este momento."))
 
+        elif url.path == "/guardar-reproduccion":
+            config = cargar_config()
+            config["reproduccion_automatica"] = "activa" in formulario
+            todos = {g["genero"] for g in GENEROS_AUTORIZADOS}
+            elegidos = [g for g in formulario.get("generos", []) if g in todos]
+            # si están todos marcados se guarda lista vacía (= todos)
+            config["generos_reproduccion"] = (
+                [] if len(elegidos) == len(todos) else elegidos
+            )
+            guardar_config(config)
+            self._redirigir("/?msg=" + urllib.parse.quote(
+                "Reproducción automática guardada."))
+
+        elif url.path == "/reproducir-ahora":
+            config = cargar_config()
+            if _encender_musica(config, "prueba manual"):
+                self._redirigir("/?msg=" + urllib.parse.quote(
+                    "¡Música sonando! Revise la aplicación de Spotify."))
+            else:
+                mensaje = _leer_estado()["mensaje_musica"] or "No se pudo reproducir."
+                self._redirigir("/?err=" + urllib.parse.quote(mensaje))
+
+        elif url.path == "/detener-musica":
+            _apagar_musica()
+            self._redirigir("/?msg=" + urllib.parse.quote("Música detenida."))
+
+        elif url.path == "/desconectar-spotify":
+            reproductor.desconectar()
+            _actualizar_estado(musica_sonando=False, mensaje_musica=None)
+            self._redirigir("/?msg=" + urllib.parse.quote(
+                "Cuenta de Spotify desconectada."))
+
         elif url.path == "/buscar-ahora":
             if _leer_estado()["buscando"]:
                 self._redirigir("/?err=" + urllib.parse.quote(
@@ -544,11 +737,18 @@ def main():
                         help="No abrir el navegador automáticamente.")
     argumentos = parser.parse_args()
 
-    Planificador().start()
-
     direccion = ("127.0.0.1", argumentos.puerto)
-    servidor = ThreadingHTTPServer(direccion, Manejador)
     url = f"http://127.0.0.1:{argumentos.puerto}"
+    try:
+        servidor = ThreadingHTTPServer(direccion, Manejador)
+    except OSError:
+        # Ya hay una copia del agente corriendo: solo se abre el panel.
+        print(f"El agente ya está en ejecución. Abriendo el panel: {url}")
+        if not argumentos.sin_navegador:
+            webbrowser.open(url)
+        return
+
+    Planificador().start()
     print(f"Aplicación web del agente iniciada en {url}")
     print("Deje esta ventana abierta: el agente se activa solo en los horarios "
           "configurados (lunes a viernes por defecto). Ctrl+C para salir.")

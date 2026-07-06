@@ -82,6 +82,7 @@ class ClienteSpotify:
                 continue  # se excluye todo contenido explícito: uso escolar
             canciones.append(
                 {
+                    "uri": pista.get("uri"),
                     "nombre": pista.get("name"),
                     "artistas": [a.get("name") for a in pista.get("artists", [])],
                     "album": (pista.get("album") or {}).get("name"),

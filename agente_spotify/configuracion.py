@@ -27,6 +27,10 @@ CONFIG_POR_DEFECTO = {
     ],
     # 0 = lunes ... 6 = domingo (igual que datetime.weekday())
     "dias": [0, 1, 2, 3, 4],
+    # Reproducción automática al llegar cada franja (requiere Spotify Premium)
+    "reproduccion_automatica": False,
+    # Géneros que pueden sonar; lista vacía = todos los autorizados
+    "generos_reproduccion": [],
 }
 
 
@@ -59,7 +63,14 @@ def validar_config(config):
     dias = sorted({int(d) for d in config.get("dias", []) if 0 <= int(d) <= 6})
     if not dias:
         raise ValueError("Debe seleccionar al menos un día de la semana.")
-    return {"franjas": franjas, "dias": dias}
+    return {
+        "franjas": franjas,
+        "dias": dias,
+        "reproduccion_automatica": bool(config.get("reproduccion_automatica", False)),
+        "generos_reproduccion": [
+            g for g in config.get("generos_reproduccion", []) if isinstance(g, str)
+        ],
+    }
 
 
 def cargar_config():
