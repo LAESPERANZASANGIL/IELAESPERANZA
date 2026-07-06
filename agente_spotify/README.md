@@ -55,6 +55,10 @@ repositorio.
   `musica_AAAAMMDD_HHMM.json` en `agente_spotify/resultados/`, con un visor
   web que muestra canciones y playlists por género, con enlaces directos para
   abrirlas en Spotify.
+- **🎧 Escuchar en vivo**: cada canción y playlist tiene un botón
+  **▶ Escuchar** que abre el reproductor oficial de Spotify dentro del mismo
+  visor. Sin iniciar sesión se escucha una vista previa de 30 segundos; con
+  sesión iniciada en Spotify en el navegador, la reproducción completa.
 
 ## 🎼 Géneros autorizados
 

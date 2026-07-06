@@ -148,6 +148,38 @@ button.peligro { background:#c0392b; padding:4px 10px; }
 a { color:#128a40; }
 .fila-franja td { border:none; padding:4px 6px; }
 small { color:#5b6b78; }
+#reproductor { position:fixed; bottom:0; left:0; right:0; display:none;
+  background:#191414; padding:10px 16px; box-shadow:0 -2px 10px rgba(0,0,0,.35); }
+#reproductor iframe { width:100%; height:152px; border:0; border-radius:12px; }
+#reproductor .cerrar { position:absolute; top:-14px; right:14px; background:#c0392b;
+  border-radius:50%; width:28px; height:28px; padding:0; font-weight:700; }
+.boton-escuchar { background:#1DB954; color:#fff; border:none; border-radius:14px;
+  padding:4px 12px; font-size:.85rem; cursor:pointer; }
+"""
+
+GUION_REPRODUCTOR = """
+function reproducir(enlace) {
+  const m = enlace.match(/open\\.spotify\\.com\\/(intl-[a-z]+\\/)?(track|playlist|album|artist)\\/([A-Za-z0-9]+)/);
+  if (!m) { window.open(enlace, '_blank'); return; }
+  document.getElementById('marco-reproductor').src =
+    'https://open.spotify.com/embed/' + m[2] + '/' + m[3] + '?utm_source=generator&theme=0';
+  document.getElementById('reproductor').style.display = 'block';
+  document.body.style.paddingBottom = '190px';
+}
+function cerrarReproductor() {
+  document.getElementById('marco-reproductor').src = '';
+  document.getElementById('reproductor').style.display = 'none';
+  document.body.style.paddingBottom = '0';
+}
+"""
+
+BARRA_REPRODUCTOR = """
+<div id="reproductor">
+  <button type="button" class="cerrar" title="Cerrar reproductor"
+    onclick="cerrarReproductor()">✕</button>
+  <iframe id="marco-reproductor" allow="autoplay; clipboard-write;
+    encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+</div>
 """
 
 GUION_JS = """
@@ -329,11 +361,15 @@ def _pagina_resultado(nombre_archivo):
             f"<tr><td>{html.escape(c.get('nombre') or '')}</td>"
             f"<td>{html.escape(', '.join(c.get('artistas') or []))}</td>"
             f"<td>{c.get('duracion_min', '')} min</td>"
-            f"<td><a href='{html.escape(c.get('enlace') or '#')}' target='_blank'>▶ Abrir en Spotify</a></td></tr>"
+            f"<td><button type='button' class='boton-escuchar' "
+            f"onclick=\"reproducir('{html.escape(c.get('enlace') or '')}')\">▶ Escuchar</button> "
+            f"<a href='{html.escape(c.get('enlace') or '#')}' target='_blank'><small>Abrir en Spotify</small></a></td></tr>"
             for c in genero.get("canciones", [])
         ) or "<tr><td colspan='4'><small>Sin canciones encontradas.</small></td></tr>"
         listas = "".join(
-            f"<li><a href='{html.escape(p.get('enlace') or '#')}' target='_blank'>"
+            f"<li><button type='button' class='boton-escuchar' "
+            f"onclick=\"reproducir('{html.escape(p.get('enlace') or '')}')\">▶ Escuchar</button> "
+            f"<a href='{html.escape(p.get('enlace') or '#')}' target='_blank'>"
             f"{html.escape(p.get('nombre') or '')}</a> "
             f"<small>({p.get('total_canciones', '?')} canciones)</small></li>"
             for p in genero.get("playlists", [])
@@ -356,8 +392,14 @@ def _pagina_resultado(nombre_archivo):
 <header><h1>🎵 Resultados de búsqueda</h1><p>{fecha}</p></header>
 <main>
 <p><a href="/">← Volver al panel</a></p>
+<p class="aviso">🎧 Pulse <b>▶ Escuchar</b> en cualquier canción o playlist para
+reproducirla aquí mismo con el reproductor de Spotify. Sin iniciar sesión se
+escucha una vista previa; con sesión iniciada en Spotify, la canción completa.</p>
 {''.join(secciones)}
-</main></body></html>"""
+</main>
+{BARRA_REPRODUCTOR}
+<script>{GUION_REPRODUCTOR}</script>
+</body></html>"""
 
 
 # ---------------------------------------------------------------------- #
