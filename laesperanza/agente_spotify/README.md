@@ -6,8 +6,8 @@ canción marcada como contenido explícito**.
 
 ## 📦 Instalación para usuario final (Windows)
 
-Haga **doble clic en `instalar.bat`** (en la raíz del repositorio). El
-instalador hace todo solo:
+Haga **doble clic en `instalar.bat`** (dentro de la carpeta `laesperanza`).
+El instalador hace todo solo:
 
 1. **Instala Python automáticamente** si el computador no lo tiene
    (descarga silenciosa desde python.org).
@@ -18,8 +18,9 @@ instalador hace todo solo:
 
 ## ▶️ Inicio manual (alternativa)
 
-- **Windows:** doble clic en `iniciar_agente.bat`.
-- **Cualquier sistema:** `python -m agente_spotify.webapp`
+- **Windows:** doble clic en `iniciar_agente.bat` (carpeta `laesperanza`).
+- **Cualquier sistema:** desde la carpeta `laesperanza` ejecute
+  `python -m agente_spotify.webapp`
   (requiere Python 3.9+; no usa librerías externas).
 
 Se abre automáticamente el panel en el navegador: <http://127.0.0.1:8000>.
