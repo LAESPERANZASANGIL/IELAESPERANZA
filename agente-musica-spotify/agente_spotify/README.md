@@ -1,7 +1,7 @@
 # 🎵 Agente de música Spotify — I.E. La Esperanza
 
 Aplicación web local que busca música apta para el entorno escolar en Spotify.
-Solo busca los **20 géneros autorizados** por la institución y **excluye toda
+Solo busca los **22 géneros autorizados** por la institución y **excluye toda
 canción marcada como contenido explícito**.
 
 ## 📦 Instalación para usuario final (Windows)
@@ -97,7 +97,9 @@ Balada pop · Música instrumental · Música clásica moderna · Jazz suave ·
 Bossa nova · Salsa clásica sana · Merengue tradicional · Cumbia colombiana ·
 Vallenato tradicional · Música andina colombiana · Música llanera ·
 Música tropical familiar · Gospel · Folk acústico · Pop acústico ·
-Música ambiental · Bandas sonoras educativas
+Música ambiental · Bandas sonoras educativas ·
+Música infantil educativa (niños 7-12 años) ·
+Música juvenil positiva (jóvenes 13-17 años)
 
 La lista completa, con características y uso recomendado de cada género,
 está en [`generos.py`](generos.py).

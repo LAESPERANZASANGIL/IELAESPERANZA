@@ -431,7 +431,7 @@ def _pagina_principal(mensaje=None, error=None):
 </head><body>
 <header>
   <h1>🎵 Agente de música Spotify — I.E. La Esperanza</h1>
-  <p>Busca solo los 20 géneros autorizados, sin contenido explícito.</p>
+  <p>Busca solo los 22 géneros autorizados, sin contenido explícito.</p>
 </header>
 <main>
 {avisos}

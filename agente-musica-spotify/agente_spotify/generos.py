@@ -129,4 +129,16 @@ GENEROS_AUTORIZADOS = [
         "caracteristicas": "Música de películas con tono inspirador",
         "uso_recomendado": "Presentaciones, videos institucionales",
     },
+    {
+        "genero": "Música infantil educativa",
+        "consulta": "música infantil educativa canciones para niños",
+        "caracteristicas": "Canciones sanas y didácticas para niños de 7 a 12 años",
+        "uso_recomendado": "Recreación y aprendizaje de los más pequeños (7-12 años)",
+    },
+    {
+        "genero": "Música juvenil positiva",
+        "consulta": "música juvenil positiva letras sanas para adolescentes",
+        "caracteristicas": "Ritmos actuales con letras sanas para jóvenes de 13 a 17 años",
+        "uso_recomendado": "Actividades juveniles y de integración (13-17 años)",
+    },
 ]
