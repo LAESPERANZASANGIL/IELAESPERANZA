@@ -297,6 +297,21 @@ def _html_estado():
             f"<p class='estado-activo'>🟢 AGENTE ACTIVO — franja "
             f"{franja['inicio']}–{franja['fin']} (se desactiva a las {fin:%I:%M %p})</p>"
         )
+        # Diagnóstico de reproducción automática durante la franja activa
+        if not estado["musica_sonando"]:
+            if not config.get("reproduccion_automatica"):
+                partes.append(
+                    "<div class='error'>ℹ️ La <b>reproducción automática está "
+                    "DESACTIVADA</b>. Vaya a la sección «🔊 Reproducción automática», "
+                    "marque la casilla «Reproducir música automáticamente al llegar "
+                    "cada franja» y pulse <b>Guardar</b> para que la música suene sola.</div>"
+                )
+            elif not reproductor.hay_cuenta_conectada():
+                partes.append(
+                    "<div class='error'>⚠️ Reproducción automática activada, pero "
+                    "<b>no hay una cuenta de Spotify conectada</b>. Conéctela en la "
+                    "sección «🔊 Reproducción automática».</div>"
+                )
     else:
         proxima = proxima_activacion(momento, config)
         dia = NOMBRES_DIAS[proxima.weekday()] if proxima else "—"
