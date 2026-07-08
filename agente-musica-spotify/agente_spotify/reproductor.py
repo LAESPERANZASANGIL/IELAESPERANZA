@@ -127,8 +127,15 @@ def _api(metodo, ruta, cuerpo=None):
     )
     try:
         with urllib.request.urlopen(peticion, timeout=30) as respuesta:
-            texto = respuesta.read().decode("utf-8")
-            return json.loads(texto) if texto else {}
+            texto = respuesta.read().decode("utf-8").strip()
+            if not texto:
+                return {}
+            try:
+                return json.loads(texto)
+            except json.JSONDecodeError:
+                # Los comandos de reproducción (play/pause) a veces responden
+                # con un cuerpo que no es JSON; como no lo necesitamos, se ignora.
+                return {}
     except urllib.error.HTTPError as error:
         detalle = ""
         try:
