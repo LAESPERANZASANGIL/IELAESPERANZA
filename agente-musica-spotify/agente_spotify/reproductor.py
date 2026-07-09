@@ -140,17 +140,34 @@ def _api(metodo, ruta, cuerpo=None):
                 # con un cuerpo que no es JSON; como no lo necesitamos, se ignora.
                 return {}
     except urllib.error.HTTPError as error:
+        cuerpo_bruto = ""
         detalle = ""
         try:
-            detalle = json.loads(error.read().decode())["error"]["message"]
+            cuerpo_bruto = error.read().decode("utf-8", errors="replace").strip()
+            info_error = json.loads(cuerpo_bruto).get("error", {})
+            # Spotify a veces manda el motivo en "message" y otras en "reason"
+            detalle = " ".join(
+                filter(None, [info_error.get("message"), info_error.get("reason")])
+            )
         except Exception:  # noqa: BLE001
             pass
-        if error.code == 403 and "PREMIUM" in detalle.upper():
+
+        if error.code == 403:
+            # El 403 en los comandos de reproducción (play/pause/dispositivos)
+            # casi siempre significa que la cuenta conectada no es Premium,
+            # aunque Spotify no siempre lo indique con la palabra "premium".
             raise RuntimeError(
-                "La cuenta conectada no es Spotify Premium. Spotify solo "
-                "permite reproducción automática con cuentas Premium."
+                "La cuenta de Spotify conectada no puede reproducir música "
+                "automáticamente (Spotify respondió 403 Forbidden). La causa "
+                "casi siempre es que la cuenta no es Spotify Premium: el "
+                "control de reproducción por programa solo funciona con "
+                "cuentas Premium. Verifique que la cuenta conectada en el "
+                "panel sea la Premium del colegio."
+                + (f" Detalle de Spotify: {detalle}" if detalle else "")
             ) from error
-        raise RuntimeError(detalle or f"Spotify respondió error {error.code}.") from error
+        raise RuntimeError(
+            detalle or cuerpo_bruto or f"Spotify respondió error {error.code}."
+        ) from error
 
 
 def dispositivos():
