@@ -96,11 +96,13 @@ def fin_de_franja(momento, franja):
 
 
 # ---------------------------------------------------------------------- #
-def ejecutar_busqueda(cliente, momento, al_avanzar=None):
-    """Busca todos los géneros autorizados y guarda el resultado en JSON.
+def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None):
+    """Busca los géneros seleccionados y guarda el resultado en JSON.
 
     `al_avanzar(genero, indice, total)` es un callback opcional para
     reportar el progreso (lo usa la aplicación web).
+    `generos_permitidos` es una lista/conjunto de nombres de género a buscar;
+    si es None o está vacía, se buscan todos los géneros autorizados.
     """
     print(f"[{momento:%Y-%m-%d %H:%M}] Iniciando búsqueda de música autorizada...")
     informe = {
@@ -110,8 +112,13 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None):
         "generos": [],
     }
 
-    total = len(GENEROS_AUTORIZADOS)
-    for indice, genero in enumerate(GENEROS_AUTORIZADOS, start=1):
+    permitidos = set(generos_permitidos or [])
+    lista = [
+        g for g in GENEROS_AUTORIZADOS
+        if not permitidos or g["genero"] in permitidos
+    ]
+    total = len(lista)
+    for indice, genero in enumerate(lista, start=1):
         print(f"  → Buscando: {genero['genero']}")
         if al_avanzar:
             al_avanzar(genero["genero"], indice, total)
@@ -151,7 +158,10 @@ def modo_agente(cliente):
         momento = ahora_colombia()
         franja = franja_activa(momento, config)
         if franja:
-            ejecutar_busqueda(cliente, momento)
+            ejecutar_busqueda(
+                cliente, momento,
+                generos_permitidos=config.get("generos_reproduccion") or None,
+            )
             fin = fin_de_franja(momento, franja)
             segundos = max(0, (fin - ahora_colombia()).total_seconds())
             print(f"  Agente activo hasta las {fin:%I:%M %p}. "

@@ -89,7 +89,10 @@ def _correr_busqueda(origen):
             _actualizar_estado(progreso=f"Buscando {indice}/{total}: {genero}")
 
         momento = ahora_colombia()
-        archivo = ejecutar_busqueda(cliente, momento, al_avanzar=avance)
+        generos = cargar_config().get("generos_reproduccion") or None
+        archivo = ejecutar_busqueda(
+            cliente, momento, al_avanzar=avance, generos_permitidos=generos
+        )
         _actualizar_estado(
             ultima_busqueda=f"{momento:%Y-%m-%d %I:%M %p} ({origen})",
             ultimo_archivo=archivo.name,
@@ -219,6 +222,11 @@ button.peligro { background:#c0392b; padding:4px 10px; }
 .error { background:#fdecea; color:#b3271e; padding:10px 14px; border-radius:8px; }
 .aviso { background:#e8f7ee; color:#128a40; padding:10px 14px; border-radius:8px; }
 .dias label { margin-right:14px; font-size:.95rem; }
+.lista-generos { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:6px 16px; margin:10px 0 16px; }
+.lista-generos label { font-size:.93rem; display:flex; align-items:center; gap:6px; }
+.fila-botones { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.fila-botones form { margin:0; }
 a { color:#128a40; }
 .fila-franja td { border:none; padding:4px 6px; }
 small { color:#5b6b78; }
@@ -365,8 +373,7 @@ def _seccion_reproduccion(config):
 
     marcados = set(config.get("generos_reproduccion") or [])
     casillas = "".join(
-        f"<label style='display:inline-block;width:270px'>"
-        f"<input type='checkbox' name='generos' value='{html.escape(g['genero'])}' "
+        f"<label><input type='checkbox' name='generos' value='{html.escape(g['genero'])}' "
         f"{'checked' if (not marcados or g['genero'] in marcados) else ''}> "
         f"{html.escape(g['genero'])}</label>"
         for g in GENEROS_AUTORIZADOS
@@ -379,19 +386,22 @@ def _seccion_reproduccion(config):
       <b>Reproducir música automáticamente al llegar cada franja</b>
       (y detenerla sola al terminar)</label></p>
     <p><small>La música suena en la aplicación de Spotify de este computador:
-    manténgala abierta. Géneros que pueden sonar:</small></p>
-    <p>{casillas}</p>
-    <button type="submit">💾 Guardar reproducción automática</button>
+    manténgala abierta. <b>Solo se busca y se reproduce la música de los
+    géneros marcados</b> aquí abajo:</small></p>
+    <div class="lista-generos">{casillas}</div>
+    <button type="submit">💾 Guardar géneros y reproducción automática</button>
   </form>
-  <form method="post" action="/reproducir-ahora" style="display:inline">
-    <button type="submit">▶ Probar: sonar ahora</button>
-  </form>
-  <form method="post" action="/detener-musica" style="display:inline">
-    <button type="submit" class="secundario">⏸ Detener música</button>
-  </form>
-  <form method="post" action="/desconectar-spotify" style="display:inline">
-    <button type="submit" class="peligro">Desconectar cuenta</button>
-  </form>"""
+  <div class="fila-botones">
+    <form method="post" action="/reproducir-ahora">
+      <button type="submit">▶ Probar: sonar ahora</button>
+    </form>
+    <form method="post" action="/detener-musica">
+      <button type="submit" class="secundario">⏸ Detener música</button>
+    </form>
+    <form method="post" action="/desconectar-spotify">
+      <button type="submit" class="peligro">Desconectar cuenta</button>
+    </form>
+  </div>"""
 
 
 def _pagina_principal(mensaje=None, error=None):
