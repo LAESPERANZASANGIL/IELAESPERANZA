@@ -10,6 +10,7 @@ SPOTIFY_CLIENT_SECRET.
 
 import base64
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import json
@@ -78,8 +79,20 @@ class ClienteSpotify:
                 "User-Agent": USER_AGENT,
             },
         )
-        with urllib.request.urlopen(peticion, timeout=30) as respuesta:
-            return json.loads(respuesta.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(peticion, timeout=30) as respuesta:
+                return json.loads(respuesta.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            # Muestra el motivo REAL que envía Spotify (no solo "Forbidden").
+            detalle = ""
+            try:
+                cuerpo = json.loads(error.read().decode("utf-8"))
+                detalle = cuerpo.get("error", {}).get("message", "")
+            except Exception:  # noqa: BLE001
+                pass
+            raise RuntimeError(
+                f"HTTP {error.code}: {detalle or error.reason}"
+            ) from error
 
     # ------------------------------------------------------------------ #
     def buscar_canciones(self, consulta, limite=10, mercado="CO"):
