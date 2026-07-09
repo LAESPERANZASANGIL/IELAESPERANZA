@@ -1,19 +1,19 @@
 @echo off
 rem ================================================================
-rem  INSTALADOR - Agente de musica Spotify (I.E. La Esperanza)
+rem  INSTALADOR - Emisora la voz de la esperanza FM Estereo
 rem  Haga doble clic en este archivo. El instalador:
 rem    1. Instala Python automaticamente si el PC no lo tiene.
-rem    2. Crea el acceso directo "Agente de musica Spotify" en el
-rem       Escritorio.
+rem    2. Crea el acceso directo "Emisora la voz de la esperanza FM
+rem       Estereo" en el Escritorio.
 rem    3. Deja el agente iniciando solo cada vez que se enciende
 rem       el computador (sin intervencion humana).
 rem    4. Inicia la aplicacion de una vez.
 rem ================================================================
-title Instalador - Agente de musica Spotify (I.E. La Esperanza)
+title Instalador - Emisora la voz de la esperanza FM Estereo
 cd /d "%~dp0"
 echo.
 echo  ==============================================================
-echo   INSTALADOR - Agente de musica Spotify - I.E. La Esperanza
+echo   INSTALADOR - Emisora la voz de la esperanza FM Estereo
 echo  ==============================================================
 echo.
 
@@ -59,11 +59,11 @@ echo        Python instalado correctamente.
 rem ---------- Paso 2: acceso directo en el Escritorio ----------
 :accesos
 echo  [2/4] Creando acceso directo en el Escritorio...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Agente de musica Spotify.lnk'); $s.TargetPath = '%~dp0iniciar_agente.bat'; $s.WorkingDirectory = '%~dp0'; $s.Description = 'Panel del agente de musica - I.E. La Esperanza'; $s.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Emisora la voz de la esperanza FM Estereo.lnk'); $s.TargetPath = '%~dp0iniciar_agente.bat'; $s.WorkingDirectory = '%~dp0'; $s.Description = 'Emisora la voz de la esperanza FM Estereo'; $s.Save()"
 
 rem ---------- Paso 3: inicio automatico con Windows ----------
 echo  [3/4] Configurando inicio automatico al encender el PC...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut($ws.SpecialFolders.Item('Startup') + '\Agente de musica Spotify (automatico).lnk'); $s.TargetPath = '%~dp0iniciar_oculto.vbs'; $s.WorkingDirectory = '%~dp0'; $s.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut($ws.SpecialFolders.Item('Startup') + '\Emisora la voz de la esperanza FM Estereo (automatico).lnk'); $s.TargetPath = '%~dp0iniciar_oculto.vbs'; $s.WorkingDirectory = '%~dp0'; $s.Save()"
 
 rem ---------- Paso 4: iniciar ahora ----------
 echo  [4/4] Iniciando la aplicacion...

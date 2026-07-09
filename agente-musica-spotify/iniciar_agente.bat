@@ -1,5 +1,6 @@
 @echo off
-rem Inicia la aplicacion web del Agente de musica Spotify (I.E. La Esperanza)
+rem Inicia la aplicacion web de la Emisora la voz de la esperanza FM Estereo
+title Emisora la voz de la esperanza FM Estereo
 cd /d "%~dp0"
 
 rem Busca Python instalado (python o el lanzador py)

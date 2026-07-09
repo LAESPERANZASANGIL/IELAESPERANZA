@@ -441,11 +441,11 @@ def _pagina_principal(mensaje=None, error=None):
 <html lang="es"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agente de música Spotify — I.E. La Esperanza</title>
+<title>Emisora la voz de la esperanza FM Estéreo</title>
 <style>{ESTILOS}</style>
 </head><body>
 <header>
-  <h1>🎵 Agente de música Spotify — I.E. La Esperanza</h1>
+  <h1>📻 Emisora la voz de la esperanza FM Estéreo</h1>
   <p>Busca solo los 22 géneros autorizados, sin contenido explícito.</p>
 </header>
 <main>
@@ -764,7 +764,8 @@ def main():
         return
 
     Planificador().start()
-    print(f"Aplicación web del agente iniciada en {url}")
+    print("Emisora la voz de la esperanza FM Estéreo")
+    print(f"Aplicación web iniciada en {url}")
     print("Deje esta ventana abierta: el agente se activa solo en los horarios "
           "configurados (lunes a viernes por defecto). Ctrl+C para salir.")
     if not argumentos.sin_navegador:
