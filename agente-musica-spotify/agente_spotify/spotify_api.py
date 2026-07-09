@@ -19,6 +19,13 @@ from .configuracion import cargar_credenciales
 URL_TOKEN = "https://accounts.spotify.com/api/token"
 URL_BUSQUEDA = "https://api.spotify.com/v1/search"
 
+# Identificarse como navegador evita que la protección anti-robots de Spotify
+# rechace las peticiones de Python con un error 403 en algunas redes.
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 AgenteMusicaLaEsperanza/1.0"
+)
+
 
 class ClienteSpotify:
     def __init__(self, client_id=None, client_secret=None):
@@ -50,6 +57,7 @@ class ClienteSpotify:
             headers={
                 "Authorization": f"Basic {cabecera}",
                 "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": USER_AGENT,
             },
         )
         with urllib.request.urlopen(peticion, timeout=30) as respuesta:
@@ -64,7 +72,11 @@ class ClienteSpotify:
         token = self._obtener_token()
         url_completa = f"{url}?{urllib.parse.urlencode(parametros)}"
         peticion = urllib.request.Request(
-            url_completa, headers={"Authorization": f"Bearer {token}"}
+            url_completa,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "User-Agent": USER_AGENT,
+            },
         )
         with urllib.request.urlopen(peticion, timeout=30) as respuesta:
             return json.loads(respuesta.read().decode("utf-8"))
