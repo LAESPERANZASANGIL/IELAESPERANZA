@@ -26,13 +26,28 @@ import json
 import sys
 import time
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from .configuracion import NOMBRES_DIAS, cargar_config
 from .generos import GENEROS_AUTORIZADOS
 from .spotify_api import ClienteSpotify
 
-ZONA_HORARIA = ZoneInfo("America/Bogota")
+
+def _zona_colombia():
+    """Zona horaria de Colombia.
+
+    Se intenta usar la base de datos de zonas horarias (America/Bogota); si el
+    sistema no la tiene instalada (común en Windows sin el paquete tzdata),
+    se usa un desfase fijo de UTC-5. Colombia no cambia de horario, así que
+    UTC-5 es siempre correcto.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo("America/Bogota")
+    except Exception:  # noqa: BLE001 - falta tzdata u otra causa
+        return dt.timezone(dt.timedelta(hours=-5), "America/Bogota")
+
+
+ZONA_HORARIA = _zona_colombia()
 CARPETA_RESULTADOS = Path(__file__).resolve().parent / "resultados"
 
 
