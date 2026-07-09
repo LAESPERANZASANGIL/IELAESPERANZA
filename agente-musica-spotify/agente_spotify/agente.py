@@ -145,7 +145,7 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None):
 # ---------------------------------------------------------------------- #
 def modo_agente(cliente):
     """Bucle por consola: duerme fuera de las franjas y busca al iniciar cada una."""
-    print("Agente de música Spotify — I.E. La Esperanza")
+    print("Emisora la voz de la esperanza FM Estéreo")
     while True:
         config = cargar_config()  # se relee para tomar cambios de la web
         momento = ahora_colombia()
