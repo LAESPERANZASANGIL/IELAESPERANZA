@@ -19,6 +19,7 @@ import urllib.request
 from pathlib import Path
 
 from .configuracion import cargar_credenciales
+from .spotify_api import USER_AGENT
 
 URL_TOKEN = "https://accounts.spotify.com/api/token"
 URL_AUTORIZAR = "https://accounts.spotify.com/authorize"
@@ -73,6 +74,7 @@ def _peticion_token(cuerpo):
         headers={
             "Authorization": f"Basic {credenciales}",
             "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": USER_AGENT,
         },
     )
     with urllib.request.urlopen(peticion, timeout=30) as respuesta:
@@ -123,6 +125,7 @@ def _api(metodo, ruta, cuerpo=None):
         headers={
             "Authorization": f"Bearer {_token_acceso()}",
             "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
         },
     )
     try:
