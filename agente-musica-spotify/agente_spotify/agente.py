@@ -139,7 +139,7 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
                 "playlists": playlists,
             }
         )
-        time.sleep(0.3)  # pausa corta para respetar los límites de la API
+        time.sleep(0.8)  # pausa entre géneros para no saturar a Spotify
 
     informe["errores"] = errores
     CARPETA_RESULTADOS.mkdir(parents=True, exist_ok=True)
