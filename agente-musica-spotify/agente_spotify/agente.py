@@ -118,6 +118,7 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
         if not permitidos or g["genero"] in permitidos
     ]
     total = len(lista)
+    errores = []
     for indice, genero in enumerate(lista, start=1):
         print(f"  → Buscando: {genero['genero']}")
         if al_avanzar:
@@ -127,6 +128,7 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
             playlists = cliente.buscar_playlists(genero["consulta"])
         except Exception as error:  # noqa: BLE001 - se registra y continúa
             print(f"    ¡Error consultando Spotify!: {error}", file=sys.stderr)
+            errores.append(f"{genero['genero']}: {error}")
             canciones, playlists = [], []
         informe["generos"].append(
             {
@@ -139,6 +141,7 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
         )
         time.sleep(0.3)  # pausa corta para respetar los límites de la API
 
+    informe["errores"] = errores
     CARPETA_RESULTADOS.mkdir(parents=True, exist_ok=True)
     archivo = CARPETA_RESULTADOS / f"musica_{momento:%Y%m%d_%H%M}.json"
     archivo.write_text(
@@ -146,6 +149,9 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
     )
     total_canciones = sum(len(g["canciones"]) for g in informe["generos"])
     print(f"  Listo: {total_canciones} canciones aptas guardadas en {archivo.name}")
+    if errores:
+        print(f"  ¡Atención! {len(errores)} de {total} géneros fallaron al "
+              "consultar Spotify (ver detalle arriba).", file=sys.stderr)
     return archivo
 
 
