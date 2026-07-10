@@ -29,6 +29,9 @@ import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+VERSION = "2026-07-10-1"  # se muestra al pie del panel para confirmar visualmente
+# que el PC está corriendo esta versión y no una copia vieja de los archivos.
+
 from . import reproductor
 from .agente import (
     CARPETA_RESULTADOS,
@@ -508,6 +511,7 @@ def _pagina_principal(mensaje=None, error=None):
   <h2>Resultados guardados</h2>
   {tabla_resultados}
 </section>
+<p style="text-align:center"><small>Versión del programa: {VERSION}</small></p>
 </main>
 <script>{GUION_JS}{franjas_js}</script>
 </body></html>"""
