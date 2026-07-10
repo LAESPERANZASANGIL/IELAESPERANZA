@@ -29,7 +29,7 @@ import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "2026-07-10-1"  # se muestra al pie del panel para confirmar visualmente
+VERSION = "2026-07-10-2"  # se muestra al pie del panel para confirmar visualmente
 # que el PC está corriendo esta versión y no una copia vieja de los archivos.
 
 from . import reproductor
@@ -96,9 +96,26 @@ def _correr_busqueda(origen):
         archivo = ejecutar_busqueda(
             cliente, momento, al_avanzar=avance, generos_permitidos=generos
         )
+        datos = json.loads(archivo.read_text(encoding="utf-8"))
+        errores = datos.get("errores") or []
+        total_canciones = sum(len(g["canciones"]) for g in datos.get("generos", []))
+        error_busqueda = None
+        if errores:
+            error_busqueda = (
+                f"{len(errores)} de {len(datos.get('generos', []))} géneros no se "
+                f"pudieron consultar. Motivo del primero: {errores[0]}. Si dice "
+                "'429' o 'Too Many Requests', espere 1-2 minutos antes de volver "
+                "a buscar (Spotify limita las búsquedas muy seguidas)."
+            )
+        elif total_canciones == 0:
+            error_busqueda = (
+                "La búsqueda terminó sin encontrar canciones en ningún género. "
+                "Intente de nuevo en un par de minutos."
+            )
         _actualizar_estado(
             ultima_busqueda=f"{momento:%Y-%m-%d %I:%M %p} ({origen})",
             ultimo_archivo=archivo.name,
+            ultimo_error=error_busqueda,
         )
     except Exception as error:  # noqa: BLE001 - se muestra en la interfaz
         _actualizar_estado(ultimo_error=str(error))
