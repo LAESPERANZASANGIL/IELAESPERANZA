@@ -84,14 +84,30 @@ class ClienteSpotify:
                 return json.loads(respuesta.read().decode("utf-8"))
         except urllib.error.HTTPError as error:
             # Muestra el motivo REAL que envía Spotify (no solo "Forbidden").
+            cuerpo_bruto = ""
             detalle = ""
             try:
-                cuerpo = json.loads(error.read().decode("utf-8"))
-                detalle = cuerpo.get("error", {}).get("message", "")
+                cuerpo_bruto = error.read().decode("utf-8", errors="replace").strip()
+                info_error = json.loads(cuerpo_bruto).get("error", {})
+                detalle = " ".join(
+                    filter(None, [info_error.get("message"), info_error.get("reason")])
+                )
             except Exception:  # noqa: BLE001
                 pass
+
+            if error.code == 403 and not detalle:
+                # Spotify/Cloudflare a veces bloquea temporalmente sin dar
+                # motivo cuando detecta muchas peticiones seguidas desde la
+                # misma red (lo confunde con actividad de robot).
+                raise RuntimeError(
+                    "HTTP 403: Forbidden (sin motivo detallado). Si esto pasa "
+                    "después de varias búsquedas seguidas, es probable que "
+                    "Spotify haya bloqueado temporalmente esta conexión por "
+                    "exceso de peticiones; espere 10-15 minutos sin buscar y "
+                    "vuelva a intentar."
+                ) from error
             raise RuntimeError(
-                f"HTTP {error.code}: {detalle or error.reason}"
+                f"HTTP {error.code}: {detalle or cuerpo_bruto or error.reason}"
             ) from error
 
     # ------------------------------------------------------------------ #

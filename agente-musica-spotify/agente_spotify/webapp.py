@@ -29,7 +29,7 @@ import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "2026-07-10-2"  # se muestra al pie del panel para confirmar visualmente
+VERSION = "2026-07-10-3"  # se muestra al pie del panel para confirmar visualmente
 # que el PC está corriendo esta versión y no una copia vieja de los archivos.
 
 from . import reproductor
