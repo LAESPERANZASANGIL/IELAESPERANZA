@@ -4,9 +4,11 @@ import { getInstitucionConfig } from "@/modules/institucion";
 import { LandingLoginForm } from "@/components/auth/LandingLoginForm";
 
 export default async function LandingPage() {
+  // La landing nunca debe caerse: si Supabase no responde se muestran
+  // los textos por defecto y el formulario de ingreso.
   const [profile, config] = await Promise.all([
-    getCurrentProfile(),
-    getInstitucionConfig(),
+    getCurrentProfile().catch(() => null),
+    getInstitucionConfig().catch(() => null),
   ]);
 
   if (profile) redirect("/dashboard");
