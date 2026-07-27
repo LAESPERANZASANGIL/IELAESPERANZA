@@ -4,6 +4,15 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+function traducirErrorLogin(mensaje: string): string {
+  const m = mensaje.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Usuario o contraseña incorrectos.";
+  if (m.includes("email not confirmed")) return "El correo no está confirmado. En Supabase, edita el usuario y confirma su email (o créalo con 'Auto Confirm User').";
+  if (m.includes("fetch") || m.includes("network")) return "No hay conexión con la base de datos. Revisa el archivo .env.local y reinicia la aplicación.";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Espera un minuto y vuelve a intentar.";
+  return `Error: ${mensaje}`;
+}
+
 export function LandingLoginForm() {
   const router = useRouter();
   const [email, setEmail]       = useState("");
@@ -18,7 +27,7 @@ export function LandingLoginForm() {
     const supabase = createClient();
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (err) { setError("Usuario o contraseña incorrectos."); return; }
+    if (err) { setError(traducirErrorLogin(err.message)); return; }
     router.push("/dashboard");
     router.refresh();
   }
