@@ -9,6 +9,7 @@ SPOTIFY_CLIENT_SECRET.
 """
 
 import base64
+import random
 import time
 import urllib.error
 import urllib.parse
@@ -111,11 +112,18 @@ class ClienteSpotify:
             ) from error
 
     # ------------------------------------------------------------------ #
-    def buscar_canciones(self, consulta, limite=10, mercado="CO"):
-        """Busca canciones y descarta las que tienen contenido explícito."""
+    def buscar_canciones(self, consulta, limite=10, mercado="CO", tamano_grupo=50):
+        """Busca canciones y descarta las que tienen contenido explícito.
+
+        Spotify devuelve siempre los mismos resultados "más relevantes" para
+        una misma consulta, así que para no repetir siempre las mismas
+        canciones se piden hasta `tamano_grupo` (el máximo que permite la
+        API) y se elige al azar un subconjunto de `limite` entre ellas. Así
+        cada búsqueda deja una selección distinta dentro del mismo género.
+        """
         datos = self._get(
             URL_BUSQUEDA,
-            {"q": consulta, "type": "track", "limit": limite, "market": mercado},
+            {"q": consulta, "type": "track", "limit": tamano_grupo, "market": mercado},
         )
         canciones = []
         for pista in datos.get("tracks", {}).get("items", []):
@@ -131,6 +139,10 @@ class ClienteSpotify:
                     "enlace": (pista.get("external_urls") or {}).get("spotify"),
                 }
             )
+        if len(canciones) > limite:
+            canciones = random.sample(canciones, limite)
+        else:
+            random.shuffle(canciones)
         return canciones
 
     # ------------------------------------------------------------------ #
