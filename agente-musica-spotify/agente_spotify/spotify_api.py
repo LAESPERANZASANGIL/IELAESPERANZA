@@ -43,6 +43,7 @@ class ClienteSpotify:
             )
         self._token = None
         self._token_expira = 0.0
+        self._reintentar_desde = 0.0
 
     # ------------------------------------------------------------------ #
     def _obtener_token(self):
@@ -71,6 +72,11 @@ class ClienteSpotify:
 
     # ------------------------------------------------------------------ #
     def _get(self, url, parametros):
+        espera = self._reintentar_desde - time.monotonic()
+        if espera > 0:
+            raise RuntimeError(
+                f"HTTP 429: espere {int(espera) + 1} segundos antes de consultar Spotify."
+            )
         token = self._obtener_token()
         url_completa = f"{url}?{urllib.parse.urlencode(parametros)}"
         peticion = urllib.request.Request(
@@ -96,16 +102,15 @@ class ClienteSpotify:
             except Exception:  # noqa: BLE001
                 pass
 
-            if error.code == 403 and not detalle:
-                # Spotify/Cloudflare a veces bloquea temporalmente sin dar
-                # motivo cuando detecta muchas peticiones seguidas desde la
-                # misma red (lo confunde con actividad de robot).
+            if error.code == 429:
+                try:
+                    espera = max(0, int(error.headers.get("Retry-After", "30")))
+                except (ValueError, TypeError, AttributeError):
+                    espera = 30
+                self._reintentar_desde = time.monotonic() + espera
                 raise RuntimeError(
-                    "HTTP 403: Forbidden (sin motivo detallado). Si esto pasa "
-                    "después de varias búsquedas seguidas, es probable que "
-                    "Spotify haya bloqueado temporalmente esta conexión por "
-                    "exceso de peticiones; espere 10-15 minutos sin buscar y "
-                    "vuelva a intentar."
+                    f"HTTP 429: {detalle or cuerpo_bruto or error.reason}. "
+                    f"Espere {espera} segundos antes de volver a buscar."
                 ) from error
             raise RuntimeError(
                 f"HTTP {error.code}: {detalle or cuerpo_bruto or error.reason}"
@@ -113,22 +118,44 @@ class ClienteSpotify:
 
     # ------------------------------------------------------------------ #
     def buscar_canciones(self, consulta, limite=10, mercado="CO", tamano_grupo=50):
-        """Busca canciones y descarta las que tienen contenido explícito.
+        """Muestrea canciones no explícitas de hasta 50 resultados paginados.
 
-        Spotify devuelve siempre los mismos resultados "más relevantes" para
-        una misma consulta, así que para no repetir siempre las mismas
-        canciones se piden hasta `tamano_grupo` (el máximo que permite la
-        API) y se elige al azar un subconjunto de `limite` entre ellas. Así
-        cada búsqueda deja una selección distinta dentro del mismo género.
+        Cada petición obtiene como máximo 10 resultados. El sorteo mejora la
+        variedad, pero no garantiza canciones distintas entre búsquedas.
         """
-        datos = self._get(
-            URL_BUSQUEDA,
-            {"q": consulta, "type": "track", "limit": tamano_grupo, "market": mercado},
-        )
+        if type(limite) is not int or limite < 0:
+            raise ValueError("limite debe ser un entero mayor o igual a cero.")
+        if type(tamano_grupo) is not int or not 1 <= tamano_grupo <= 50:
+            raise ValueError("tamano_grupo debe ser un entero entre 1 y 50.")
+        if limite == 0:
+            return []
+
+        pistas = []
+        offset = 0
+        while offset < tamano_grupo:
+            cantidad = min(10, tamano_grupo - offset)
+            datos = self._get(
+                URL_BUSQUEDA,
+                {"q": consulta, "type": "track", "limit": cantidad,
+                 "offset": offset, "market": mercado},
+            )
+            pagina = datos.get("tracks") or {}
+            items = pagina.get("items") or []
+            pistas.extend(items[:cantidad])
+            offset += len(items[:cantidad])
+            if not items or not pagina.get("next"):
+                break
+            if offset < tamano_grupo:
+                time.sleep(0.8)
         canciones = []
-        for pista in datos.get("tracks", {}).get("items", []):
+        vistos = set()
+        for pista in pistas:
             if pista is None or pista.get("explicit"):
                 continue  # se excluye todo contenido explícito: uso escolar
+            uri = pista.get("uri")
+            if not uri or uri in vistos:
+                continue
+            vistos.add(uri)
             canciones.append(
                 {
                     "uri": pista.get("uri"),
