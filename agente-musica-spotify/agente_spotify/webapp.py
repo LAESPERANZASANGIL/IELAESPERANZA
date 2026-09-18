@@ -262,7 +262,7 @@ button { background:#1DB954; color:#fff; border:none; border-radius:6px;
          padding:8px 16px; font-size:.95rem; cursor:pointer; }
 button:hover { background:#169c46; }
 button.secundario { background:#5b6b78; }
-button.peligro { background:#c0392b; padding:4px 10px; }
+button.peligro { background:#c0392b; }
 .estado-activo { color:#128a40; font-weight:700; }
 .estado-espera { color:#5b6b78; font-weight:700; }
 .error { background:#fdecea; color:#b3271e; padding:10px 14px; border-radius:8px; }
