@@ -62,9 +62,37 @@ class BusquedaTests(unittest.TestCase):
 
     def test_parametros_invalidos(self):
         for kwargs in ({"limite": -1}, {"limite": 1.5}, {"tamano_grupo": 0},
-                       {"tamano_grupo": 51}, {"tamano_grupo": True}):
+                       {"tamano_grupo": 51}, {"tamano_grupo": True},
+                       {"offset_inicial": -1}, {"offset_inicial": 1.5}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 self.cliente.buscar_canciones("x", **kwargs)
+
+    def test_offset_inicial_desplaza_la_paginacion(self):
+        result = self.buscar([pista(i) for i in range(100)],
+                              offset_inicial=30, tamano_grupo=20)
+        self.assertEqual(len(result), 10)
+        offsets = [c.args[1]["offset"] for c in self.cliente._get.call_args_list]
+        self.assertEqual(offsets, [30, 40])
+
+    def test_offset_inicial_sin_coincidencias_reintenta_desde_cero(self):
+        total = 50
+        items = [pista(i) for i in range(total)]
+
+        def pagina(url, params):
+            start = params["offset"]
+            if start >= total:
+                return {"tracks": {"items": [], "next": None}}
+            end = start + params["limit"]
+            return {"tracks": {"items": items[start:end],
+                               "next": "siguiente" if end < total else None}}
+
+        self.cliente._get = Mock(side_effect=pagina)
+        with patch("agente_spotify.spotify_api.time.sleep"):
+            result = self.cliente.buscar_canciones(
+                "genero", offset_inicial=90, tamano_grupo=10)
+        self.assertEqual(len(result), 10)
+        offsets = [c.args[1]["offset"] for c in self.cliente._get.call_args_list]
+        self.assertEqual(offsets, [90, 0])
 
     def test_pagina_vacia_con_next_no_produce_bucle(self):
         self.cliente._get = Mock(return_value={"tracks": {"items": [], "next": "x"}})

@@ -23,6 +23,7 @@ Uso:
 import argparse
 import datetime as dt
 import json
+import random
 import sys
 import time
 from pathlib import Path
@@ -49,6 +50,11 @@ def _zona_colombia():
 
 ZONA_HORARIA = _zona_colombia()
 CARPETA_RESULTADOS = Path(__file__).resolve().parent / "resultados"
+
+# Puntos de partida posibles para la paginación de cada búsqueda: al variar
+# el desplazamiento no se trae siempre el mismo grupo de canciones "top" de
+# cada género, así que día tras día suenan artistas distintos.
+DESPLAZAMIENTOS_BUSQUEDA = [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
 
 # ---------------------------------------------------------------------- #
@@ -124,7 +130,10 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
         if al_avanzar:
             al_avanzar(genero["genero"], indice, total)
         try:
-            canciones = cliente.buscar_canciones(genero["consulta"])
+            desplazamiento = random.choice(DESPLAZAMIENTOS_BUSQUEDA)
+            canciones = cliente.buscar_canciones(
+                genero["consulta"], offset_inicial=desplazamiento
+            )
             playlists = cliente.buscar_playlists(genero["consulta"])
         except Exception as error:  # noqa: BLE001 - se registra y continúa
             print(f"    ¡Error consultando Spotify!: {error}", file=sys.stderr)

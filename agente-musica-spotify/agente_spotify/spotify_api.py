@@ -117,36 +117,34 @@ class ClienteSpotify:
             ) from error
 
     # ------------------------------------------------------------------ #
-    def buscar_canciones(self, consulta, limite=10, mercado="CO", tamano_grupo=50):
+    def buscar_canciones(self, consulta, limite=10, mercado="CO", tamano_grupo=50,
+                          offset_inicial=0):
         """Muestrea canciones no explícitas de hasta 50 resultados paginados.
 
         Cada petición obtiene como máximo 10 resultados. El sorteo mejora la
         variedad, pero no garantiza canciones distintas entre búsquedas.
+
+        `offset_inicial` desplaza el punto de partida de la paginación
+        dentro de los resultados de Spotify (para no traer siempre el mismo
+        grupo de canciones "top" de una consulta y así variar lo que suena
+        día a día; el llamador es quien decide ese desplazamiento al azar,
+        ver `agente.py`). Si con ese desplazamiento no aparece ninguna
+        canción (la consulta tiene pocas coincidencias), se reintenta una
+        vez desde el principio.
         """
         if type(limite) is not int or limite < 0:
             raise ValueError("limite debe ser un entero mayor o igual a cero.")
         if type(tamano_grupo) is not int or not 1 <= tamano_grupo <= 50:
             raise ValueError("tamano_grupo debe ser un entero entre 1 y 50.")
+        if type(offset_inicial) is not int or offset_inicial < 0:
+            raise ValueError("offset_inicial debe ser un entero mayor o igual a cero.")
         if limite == 0:
             return []
 
-        pistas = []
-        offset = 0
-        while offset < tamano_grupo:
-            cantidad = min(10, tamano_grupo - offset)
-            datos = self._get(
-                URL_BUSQUEDA,
-                {"q": consulta, "type": "track", "limit": cantidad,
-                 "offset": offset, "market": mercado},
-            )
-            pagina = datos.get("tracks") or {}
-            items = pagina.get("items") or []
-            pistas.extend(items[:cantidad])
-            offset += len(items[:cantidad])
-            if not items or not pagina.get("next"):
-                break
-            if offset < tamano_grupo:
-                time.sleep(0.8)
+        pistas = self._paginar_canciones(consulta, mercado, tamano_grupo, offset_inicial)
+        if not pistas and offset_inicial:
+            pistas = self._paginar_canciones(consulta, mercado, tamano_grupo, 0)
+
         canciones = []
         vistos = set()
         for pista in pistas:
@@ -171,6 +169,30 @@ class ClienteSpotify:
         else:
             random.shuffle(canciones)
         return canciones
+
+    # ------------------------------------------------------------------ #
+    def _paginar_canciones(self, consulta, mercado, tamano_grupo, offset_inicial):
+        """Trae hasta `tamano_grupo` pistas crudas de Spotify en páginas de 10,
+        empezando en `offset_inicial`."""
+        pistas = []
+        offset = offset_inicial
+        limite_offset = offset_inicial + tamano_grupo
+        while offset < limite_offset:
+            cantidad = min(10, limite_offset - offset)
+            datos = self._get(
+                URL_BUSQUEDA,
+                {"q": consulta, "type": "track", "limit": cantidad,
+                 "offset": offset, "market": mercado},
+            )
+            pagina = datos.get("tracks") or {}
+            items = pagina.get("items") or []
+            pistas.extend(items[:cantidad])
+            offset += len(items[:cantidad])
+            if not items or not pagina.get("next"):
+                break
+            if offset < limite_offset:
+                time.sleep(0.8)
+        return pistas
 
     # ------------------------------------------------------------------ #
     def buscar_playlists(self, consulta, limite=5, mercado="CO"):

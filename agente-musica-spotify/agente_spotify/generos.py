@@ -34,6 +34,18 @@ GENEROS_AUTORIZADOS = [
         "uso_recomendado": "Eventos institucionales, descansos tranquilos",
     },
     {
+        "genero": "Música romántica",
+        "consulta": "música romántica en español boleros",
+        "caracteristicas": "Baladas y boleros de amor en español, letras sanas",
+        "uso_recomendado": "Eventos institucionales, descansos tranquilos",
+    },
+    {
+        "genero": "Ricardo Arjona",
+        "consulta": "Ricardo Arjona",
+        "caracteristicas": "Repertorio del cantautor guatemalteco: balada y pop latino",
+        "uso_recomendado": "Descansos, eventos institucionales, ambientación general",
+    },
+    {
         "genero": "Música instrumental",
         "consulta": "música instrumental relajante",
         "caracteristicas": "Sin letra, favorece la concentración",
@@ -76,10 +88,22 @@ GENEROS_AUTORIZADOS = [
         "uso_recomendado": "Actos culturales e institucionales",
     },
     {
-        "genero": "Vallenato tradicional",
-        "consulta": "vallenato tradicional",
-        "caracteristicas": "Narrativo, cultural y popular",
-        "uso_recomendado": "Actividades colombianas, izadas de bandera",
+        "genero": "Vallenato clásico",
+        "consulta": "vallenato clásico viejo tradicional",
+        "caracteristicas": "Vallenato narrativo de las décadas pasadas, acordeón y juglares",
+        "uso_recomendado": "Actividades colombianas, izadas de bandera, actos culturales",
+    },
+    {
+        "genero": "Vallenato romántico",
+        "consulta": "vallenato romántico",
+        "caracteristicas": "Vallenato de amor y despecho, sin contenido ofensivo",
+        "uso_recomendado": "Descansos, ambientación de pasillos y cafetería",
+    },
+    {
+        "genero": "Vallenato nueva ola",
+        "consulta": "nueva ola vallenata pop",
+        "caracteristicas": "Vallenato actual con sonido moderno, sin fusión urbana",
+        "uso_recomendado": "Actividades juveniles y culturales",
     },
     {
         "genero": "Música andina colombiana",
