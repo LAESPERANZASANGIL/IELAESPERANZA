@@ -56,6 +56,14 @@ CARPETA_RESULTADOS = Path(__file__).resolve().parent / "resultados"
 # cada género, así que día tras día suenan artistas distintos.
 DESPLAZAMIENTOS_BUSQUEDA = [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
+# Una sola página (10 resultados) por género y por búsqueda: pedir más
+# (Spotify entrega de a 10 por petición) multiplica las peticiones reales
+# y agota rápido la cuota de la aplicación en Spotify. La variedad entre
+# búsquedas ya la da el desplazamiento al azar de arriba, no hace falta
+# además traer un grupo más grande para muestrear dentro de una misma
+# búsqueda.
+TAMANO_GRUPO_BUSQUEDA = 10
+
 
 # ---------------------------------------------------------------------- #
 def _a_minutos(hora_texto):
@@ -132,7 +140,8 @@ def ejecutar_busqueda(cliente, momento, al_avanzar=None, generos_permitidos=None
         try:
             desplazamiento = random.choice(DESPLAZAMIENTOS_BUSQUEDA)
             canciones = cliente.buscar_canciones(
-                genero["consulta"], offset_inicial=desplazamiento
+                genero["consulta"], offset_inicial=desplazamiento,
+                tamano_grupo=TAMANO_GRUPO_BUSQUEDA,
             )
             playlists = cliente.buscar_playlists(genero["consulta"])
         except Exception as error:  # noqa: BLE001 - se registra y continúa
