@@ -123,6 +123,35 @@ def _correr_busqueda(origen):
         _actualizar_estado(buscando=False, progreso="")
 
 
+def _intercalar_por_artista(canciones):
+    """Ordena las canciones evitando repetir artista en dos seguidas.
+
+    Agrupa por artista principal y las va tomando en rueda (una de cada
+    artista por vuelta, en orden y contenido al azar), así que un artista
+    solo vuelve a sonar tras pasar por todos los demás que sigan teniendo
+    canciones pendientes. Solo puede sonar el mismo artista seguido si al
+    final queda un único artista con canciones restantes.
+    """
+    grupos = {}
+    for cancion in canciones:
+        if not cancion.get("uri"):
+            continue
+        artista = (cancion.get("artistas") or [None])[0] or "Desconocido"
+        grupos.setdefault(artista, []).append(cancion["uri"])
+
+    listas = list(grupos.values())
+    for lista in listas:
+        random.shuffle(lista)
+    random.shuffle(listas)  # el orden en que se van turnando los artistas también varía
+
+    uris = []
+    while listas:
+        for lista in listas:
+            uris.append(lista.pop(0))
+        listas = [lista for lista in listas if lista]
+    return uris
+
+
 def _uris_para_reproducir(config):
     """Canciones (URIs) del último resultado, según los géneros elegidos."""
     archivos = sorted(CARPETA_RESULTADOS.glob("musica_*.json"), reverse=True)
@@ -130,15 +159,12 @@ def _uris_para_reproducir(config):
         return []
     datos = json.loads(archivos[0].read_text(encoding="utf-8"))
     elegidos = set(config.get("generos_reproduccion") or [])
-    uris = []
+    canciones = []
     for genero in datos.get("generos", []):
         if elegidos and genero["genero"] not in elegidos:
             continue
-        uris.extend(
-            c["uri"] for c in genero.get("canciones", []) if c.get("uri")
-        )
-    random.shuffle(uris)
-    return uris
+        canciones.extend(genero.get("canciones", []))
+    return _intercalar_por_artista(canciones)
 
 
 def _encender_musica(config, origen):
