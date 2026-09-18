@@ -1,7 +1,7 @@
 # 🎵 Agente de música Spotify — I.E. La Esperanza
 
 Aplicación web local que busca música apta para el entorno escolar en Spotify.
-Solo busca los **22 géneros autorizados** por la institución y **excluye toda
+Solo busca los **27 géneros autorizados** por la institución y **excluye toda
 canción marcada como contenido explícito**.
 
 ## 📦 Instalación para usuario final (Windows)
@@ -92,10 +92,12 @@ repositorio.
 
 ## 🎼 Géneros autorizados
 
-Pop cristiano · Música cristiana contemporánea · Pop latino positivo ·
-Balada pop · Música instrumental · Música clásica moderna · Jazz suave ·
+Pop cristiano · Música cristiana contemporánea · Jesús Adrián Romero ·
+Pop latino positivo · Balada pop · Música romántica · Ricardo Arjona ·
+Música instrumental · Música clásica moderna · Jazz suave ·
 Bossa nova · Salsa clásica sana · Merengue tradicional · Cumbia colombiana ·
-Vallenato tradicional · Música andina colombiana · Música llanera ·
+Vallenato clásico · Vallenato romántico · Vallenato nueva ola ·
+Música andina colombiana · Música llanera ·
 Música tropical familiar · Gospel · Folk acústico · Pop acústico ·
 Música ambiental · Bandas sonoras educativas ·
 Música infantil educativa (niños 7-12 años) ·

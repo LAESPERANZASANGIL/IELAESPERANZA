@@ -22,6 +22,12 @@ GENEROS_AUTORIZADOS = [
         "uso_recomendado": "Momentos de oración, formación en valores",
     },
     {
+        "genero": "Jesús Adrián Romero",
+        "consulta": "Jesús Adrián Romero",
+        "caracteristicas": "Repertorio del cantautor cristiano: alabanza y adoración",
+        "uso_recomendado": "Momentos de oración, formación en valores, actos escolares",
+    },
+    {
         "genero": "Pop latino positivo",
         "consulta": "pop latino positivo",
         "caracteristicas": "Ritmos modernos con letras sanas",
